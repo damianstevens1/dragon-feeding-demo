@@ -925,6 +925,12 @@ p {
     max(10px, env(safe-area-inset-left));
 }
 
+.video-card.is-final-reward {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+}
+
 .reward-video-stage {
   position: relative;
   min-height: 0;
@@ -933,6 +939,11 @@ p {
   background:
     radial-gradient(circle at 50% 38%, rgba(33, 176, 146, 0.2), transparent 15rem),
     #071f2e;
+}
+
+.video-card.is-final-reward .reward-video-stage {
+  border-radius: 0;
+  background: #071f2e;
 }
 
 .reward-video,
@@ -948,6 +959,12 @@ p {
   background: #071f2e;
   object-fit: contain;
   pointer-events: none;
+}
+
+.video-card.is-final-reward .reward-video,
+.video-card.is-final-reward .reward-video-poster {
+  border-radius: 0;
+  object-fit: cover;
 }
 
 .reward-video::-webkit-media-controls,
@@ -969,6 +986,11 @@ p {
     radial-gradient(circle at 50% 42%, rgba(255, 255, 248, 0.13), transparent 12rem),
     #071f2e;
   transition: opacity 180ms ease;
+}
+
+.video-card.is-final-reward .reward-video-poster {
+  padding: 0;
+  background: #071f2e;
 }
 
 .video-card.is-playing .reward-video-poster {
@@ -1008,6 +1030,20 @@ p {
   align-items: center;
   gap: 10px;
   width: 100%;
+}
+
+.video-card.is-final-reward .video-actions,
+.video-card.is-final-reward #video-continue-button,
+.video-card.is-final-reward .video-close {
+  display: none;
+}
+
+.video-card.is-final-reward #video-play-button {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
 }
 
 .video-nav-button {

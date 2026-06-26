@@ -80,7 +80,7 @@ const state = {
 
 const FINAL_REWARD_VIDEO = {
   src: "/assets/videos/final-dragon-reward.mp4",
-  posterSrc: "/assets/dragon-frames/dance-01.png"
+  posterSrc: "/assets/videos/final-dragon-reward-poster.png"
 };
 
 const FEED_TIMING = {
@@ -950,6 +950,14 @@ function showCelebration() {
 }
 
 function showFinalRewardVideo() {
+  stopSpokenAudio();
+  removeFlyingFood();
+  clearFireParticles(gameScene);
+  gameScene.dragonMood = "idle";
+  gameScene.motion = null;
+  gameScene.completedAt = 0;
+  gameScene.fireBreathing = false;
+  dragonPuppet?.classList.remove("is-fire-breathing", "is-funky-dancing");
   showRewardVideo(FINAL_REWARD_VIDEO.src, FINAL_REWARD_VIDEO.posterSrc, { kind: "final" });
 }
 
@@ -1083,8 +1091,8 @@ function updateRewardVideoNav() {
   const isCardVideo = state.rewardVideoKind === "card";
   const canUseControls = state.rewardVideoActive && state.rewardVideoSkippable;
   const maxIndex = getMaxRewardVideoIndex();
-  videoPrevButton.hidden = !state.rewardVideoActive;
-  videoNextButton.hidden = !state.rewardVideoActive;
+  videoPrevButton.hidden = !state.rewardVideoActive || !isCardVideo;
+  videoNextButton.hidden = !state.rewardVideoActive || !isCardVideo;
   videoPrevButton.disabled = !canUseControls || !isCardVideo || state.rewardVideoIndex <= 0;
   videoNextButton.disabled = !canUseControls;
   videoNextButton.textContent = isCardVideo && state.rewardVideoIndex < maxIndex ? "Next Video" : "Next";
@@ -1132,7 +1140,7 @@ function setRewardPosterVisible(visible) {
 
 function setRewardVideoSkippable(skippable) {
   state.rewardVideoSkippable = skippable;
-  if (videoCloseButton) videoCloseButton.hidden = !skippable;
+  if (videoCloseButton) videoCloseButton.hidden = state.rewardVideoKind === "final" || !skippable;
   if (videoContinueButton) videoContinueButton.hidden = true;
   rewardVideoCard?.classList.toggle("is-skip-locked", !skippable);
   updateRewardVideoNav();
