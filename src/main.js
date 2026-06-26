@@ -40,6 +40,8 @@ const videoPlayButton = document.querySelector("#video-play-button");
 const videoContinueButton = document.querySelector("#video-continue-button");
 const videoPrevButton = document.querySelector("#video-prev-button");
 const videoNextButton = document.querySelector("#video-next-button");
+const questionPrevButton = document.querySelector("#question-prev-button");
+const questionNextButton = document.querySelector("#question-next-button");
 const progressPill = document.querySelector("#progress-pill");
 const starsPill = document.querySelector("#stars-pill");
 const questionText = document.querySelector("#question-text");
@@ -72,7 +74,8 @@ const state = {
   rewardVideoDirectOpen: false,
   rewardVideoSkippable: false,
   rewardVideoKind: "card",
-  rewardVideoIndex: 0
+  rewardVideoIndex: 0,
+  completedQuestionIds: new Set()
 };
 
 const FINAL_REWARD_VIDEO = {
@@ -221,6 +224,7 @@ const spokenAudioBufferCache = new Map();
 let lastFrame = 0;
 let rewardVideoWatchdog = 0;
 let rewardVideoSkipTimer = 0;
+let finalRewardReturnTimer = 0;
 
 const gameScene = makeScene(document.querySelector("#dragon-scene"));
 const startScene = makeScene(document.querySelector("#start-canvas"), { decorative: true });
@@ -239,6 +243,8 @@ videoContinueButton.addEventListener("click", () => {
 });
 videoPrevButton.addEventListener("click", () => changeRewardVideo(-1));
 videoNextButton.addEventListener("click", advanceRewardVideo);
+questionPrevButton.addEventListener("click", () => navigateQuestion(-1));
+questionNextButton.addEventListener("click", () => navigateQuestion(1));
 videoPlayButton.addEventListener("click", () => {
   if (state.rewardVideoDirectOpen) {
     window.open(rewardVideo.currentSrc || rewardVideo.src, "_blank", "noopener");
@@ -246,7 +252,7 @@ videoPlayButton.addEventListener("click", () => {
   }
   void attemptRewardVideoPlay();
 });
-rewardVideo.addEventListener("ended", completeRewardVideo);
+rewardVideo.addEventListener("ended", handleRewardVideoEnded);
 rewardVideo.addEventListener("error", showRewardVideoFallback);
 rewardVideo.addEventListener("playing", () => {
   clearRewardVideoWatchdog();
@@ -361,6 +367,7 @@ async function startGame() {
   state.screen = "playing";
   state.questionIndex = 0;
   state.stars = 0;
+  state.completedQuestionIds = new Set();
   state.locked = false;
   state.promptSpeaking = false;
   state.selectedFood = null;
@@ -374,6 +381,7 @@ async function startGame() {
   state.rewardVideoSkippable = false;
   state.rewardVideoKind = "card";
   state.rewardVideoIndex = 0;
+  state.completedQuestionIds = new Set();
   removeFlyingFood();
   resetRewardVideo();
   gameScene.dragonMood = "idle";
@@ -392,6 +400,7 @@ async function startGame() {
   celebrationPanel.hidden = true;
   renderFoodTray();
   updateHud();
+  updateQuestionNav();
   resizeAll();
 }
 
@@ -596,6 +605,7 @@ function feedFood(foodEl, existingFlyer = null, sourceRect = null) {
   state.selectedAnswerId = null;
   state.wrongAnswerId = null;
   lockFoodTray(true);
+  updateQuestionNav();
   gameScene.dragonMood = "ready";
   const now = performance.now();
   syncDragonPuppet(gameScene, now, now * 0.001);
@@ -671,6 +681,7 @@ function openQuestion() {
   });
 
   questionPanel.hidden = false;
+  updateQuestionNav();
   void playQuestionPrompt(0);
 }
 
@@ -702,6 +713,7 @@ async function playQuestionPrompt(delayMs = 0) {
   state.promptSpeaking = false;
   repeatButton.disabled = false;
   rerenderAnswersOnly();
+  updateQuestionNav();
 }
 
 function selectAnswer(answer) {
@@ -725,6 +737,7 @@ async function handleCorrect(answer) {
   repeatButton.disabled = true;
   stopSpokenAudio();
   rerenderAnswersOnly();
+  updateQuestionNav();
   playSuccessTone();
   await playAudioOrSpeak(current.answerAudioSrc, current.answerSentence, 0);
   if (state.screen !== "playing" || state.selectedFood == null) return;
@@ -753,21 +766,24 @@ async function handleCorrect(answer) {
 }
 
 function completeFood() {
-  state.stars += 1;
-  state.questionIndex += 1;
+  state.completedQuestionIds.add(QUESTIONS[state.questionIndex].id);
+  state.stars = state.completedQuestionIds.size;
   state.promptSpeaking = false;
   repeatButton.disabled = false;
   clearRepeatTimer();
   gameScene.feedScale = state.stars;
   updateHud();
 
-  if (state.stars >= QUESTIONS.length) {
+  if (state.completedQuestionIds.size >= QUESTIONS.length) {
     state.locked = true;
     lockFoodTray(true);
-    window.setTimeout(showFinalRewardVideo, 450);
+    updateQuestionNav();
+    window.setTimeout(showFinalRewardVideo, 120);
     return;
   }
 
+  state.questionIndex = getNextQuestionIndex(state.questionIndex, 1);
+  updateHud();
   window.setTimeout(() => {
     state.locked = false;
     state.selectedFood = null;
@@ -775,6 +791,7 @@ function completeFood() {
     state.selectedAnswerId = null;
     lockFoodTray(false);
     gameScene.dragonMood = "idle";
+    updateQuestionNav();
   }, 260);
 }
 
@@ -824,6 +841,7 @@ function handleWrong(answer) {
   state.promptSpeaking = true;
   repeatButton.disabled = true;
   rerenderAnswersOnly();
+  updateQuestionNav();
   playTryAgainTone();
   playDragonPuff();
   window.setTimeout(() => {
@@ -843,16 +861,73 @@ function handleWrong(answer) {
     stopSpokenAudio();
     rerenderAnswersOnly();
     gameScene.dragonMood = "idle";
+    updateQuestionNav();
     window.setTimeout(() => {
       state.locked = false;
       lockFoodTray(false);
+      updateQuestionNav();
     }, returningFood ? 540 : 0);
   }, 720);
 }
 
 function updateHud() {
-  progressPill.textContent = `${state.stars} of ${QUESTIONS.length}`;
+  progressPill.textContent = `Card ${state.questionIndex + 1} of ${QUESTIONS.length}`;
   starsPill.textContent = `${state.stars} ${state.stars === 1 ? "star" : "stars"}`;
+  updateQuestionNav();
+}
+
+function canNavigateQuestions() {
+  return state.screen === "playing"
+    && !state.locked
+    && !state.promptSpeaking
+    && !state.rewardVideoActive
+    && questionPanel.hidden
+    && rewardVideoPanel.hidden;
+}
+
+function navigateQuestion(direction) {
+  if (!canNavigateQuestions()) return;
+  if (direction > 0 && state.questionIndex >= QUESTIONS.length - 1) {
+    showFinalRewardVideo();
+    return;
+  }
+
+  const nextIndex = Math.min(QUESTIONS.length - 1, Math.max(0, state.questionIndex + direction));
+  if (nextIndex === state.questionIndex) return;
+  stopSpokenAudio();
+  removeFlyingFood();
+  state.questionIndex = nextIndex;
+  state.selectedFood = null;
+  state.selectedFlyer = null;
+  state.selectedSourceRect = null;
+  state.draggingFood = null;
+  state.selectedAnswerId = null;
+  state.wrongAnswerId = null;
+  state.promptRun += 1;
+  gameScene.dragonMood = "idle";
+  gameScene.motion = null;
+  gameScene.fireBreathing = false;
+  clearFireParticles(gameScene);
+  dragonPuppet?.classList.remove("is-fire-breathing", "is-funky-dancing");
+  lockFoodTray(false);
+  updateHud();
+}
+
+function getNextQuestionIndex(fromIndex, direction) {
+  const fallback = Math.min(QUESTIONS.length - 1, Math.max(0, fromIndex + direction));
+  for (let step = 1; step <= QUESTIONS.length; step += 1) {
+    const index = (fromIndex + direction * step + QUESTIONS.length) % QUESTIONS.length;
+    if (!state.completedQuestionIds.has(QUESTIONS[index].id)) return index;
+  }
+  return fallback;
+}
+
+function updateQuestionNav() {
+  if (!questionPrevButton || !questionNextButton) return;
+  const canUse = canNavigateQuestions();
+  questionPrevButton.disabled = !canUse || state.questionIndex <= 0;
+  questionNextButton.disabled = !canUse;
+  questionNextButton.textContent = state.questionIndex >= QUESTIONS.length - 1 ? "Reward" : "Next";
 }
 
 function lockFoodTray(locked) {
@@ -882,7 +957,7 @@ function showRewardVideo(src, posterSrc, options = {}) {
   if (state.screen !== "playing" || state.rewardCompleting) return;
   if (!src || !rewardVideo || !rewardVideoPanel) {
     if (options.kind === "final") {
-      startTaskCompleteDance();
+      resetAfterTaskCompleted();
     } else {
       completeFood();
     }
@@ -894,6 +969,7 @@ function showRewardVideo(src, posterSrc, options = {}) {
   state.rewardVideoDirectOpen = false;
   state.rewardVideoKind = options.kind ?? "card";
   state.rewardVideoIndex = clampRewardVideoIndex(options.index ?? state.questionIndex);
+  clearFinalRewardReturnTimer();
   setRewardVideoSkippable(false);
   lockFoodTray(true);
   videoPlayButton.hidden = true;
@@ -941,6 +1017,26 @@ function loadRewardVideoSource(src, posterSrc) {
     }
   }, 1200);
   void attemptRewardVideoPlay();
+}
+
+function handleRewardVideoEnded() {
+  if (!state.rewardVideoActive) return;
+  if (state.rewardVideoKind === "final") {
+    clearRewardVideoWatchdog();
+    clearRewardVideoSkipTimer();
+    state.rewardVideoSkippable = false;
+    if (videoCloseButton) videoCloseButton.hidden = true;
+    if (videoPrevButton) videoPrevButton.hidden = true;
+    if (videoNextButton) videoNextButton.hidden = true;
+    rewardVideoCard?.classList.remove("is-skip-locked");
+    finalRewardReturnTimer = window.setTimeout(() => {
+      if (state.rewardVideoActive && state.rewardVideoKind === "final") {
+        completeRewardVideo();
+      }
+    }, 2000);
+    return;
+  }
+  completeRewardVideo();
 }
 
 function getRewardVideoForIndex(index) {
@@ -1046,10 +1142,11 @@ function completeRewardVideo() {
   if (state.rewardCompleting) return;
   state.rewardCompleting = true;
   const rewardVideoKind = state.rewardVideoKind;
+  clearFinalRewardReturnTimer();
   resetRewardVideo();
   if (state.screen === "playing") {
     if (rewardVideoKind === "final") {
-      startTaskCompleteDance();
+      resetAfterTaskCompleted();
     } else {
       completeFood();
     }
@@ -1065,6 +1162,7 @@ function resetRewardVideo() {
   setRewardVideoSkippable(false);
   clearRewardVideoWatchdog();
   clearRewardVideoSkipTimer();
+  clearFinalRewardReturnTimer();
   if (rewardVideo) {
     rewardVideo.pause();
     rewardVideo.removeAttribute("src");
@@ -1092,9 +1190,17 @@ function resetRewardVideo() {
 function clearTimers() {
   clearRepeatTimer();
   clearRewardVideoSkipTimer();
+  clearFinalRewardReturnTimer();
   if (fireBreathTimer) {
     window.clearTimeout(fireBreathTimer);
     fireBreathTimer = 0;
+  }
+}
+
+function clearFinalRewardReturnTimer() {
+  if (finalRewardReturnTimer) {
+    window.clearTimeout(finalRewardReturnTimer);
+    finalRewardReturnTimer = 0;
   }
 }
 

@@ -612,6 +612,33 @@ p {
   color: #8b5a02;
 }
 
+.question-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.question-nav-button {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 8px;
+  color: #16362f;
+  background: rgba(255, 255, 248, 0.82);
+  box-shadow: 0 10px 24px rgba(42, 70, 63, 0.12);
+  backdrop-filter: blur(12px);
+  font-size: 0.88rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.question-nav-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 .food-tray {
   position: absolute;
   z-index: 5;
@@ -1293,6 +1320,16 @@ p {
   .stars-pill {
     min-width: 98px;
     padding: 10px;
+  }
+
+  .question-nav {
+    max-width: 176px;
+  }
+
+  .question-nav-button {
+    min-height: 38px;
+    padding: 7px 8px;
+    font-size: 0.78rem;
   }
 
   .question-dialog h2 {
