@@ -54,6 +54,7 @@ const rewardVideoPoster = document.querySelector("#reward-video-poster");
 const rewardVideoCard = rewardVideoPanel?.querySelector(".video-card");
 const munchVideo = document.querySelector("#munch-video");
 const munchVideoPoster = document.querySelector("#munch-video-poster");
+const munchTrayOverlay = document.querySelector("#munch-tray-overlay");
 const dragonPuppet = document.querySelector("#dragon-puppet");
 const dragonMouthTarget = document.querySelector("#dragon-mouth-target");
 const dragonFireBreath = document.querySelector("#dragon-fire-breath");
@@ -294,6 +295,7 @@ munchVideo?.addEventListener("timeupdate", () => {
 window.addEventListener("resize", resizeAll);
 
 renderFoodTray();
+renderMunchTrayOverlay();
 resizeAll();
 animate(0);
 
@@ -444,6 +446,17 @@ function renderFoodTray() {
     `;
     addFoodPointerHandlers(button);
     foodTray.append(button);
+  });
+}
+
+function renderMunchTrayOverlay() {
+  if (!munchTrayOverlay) return;
+  munchTrayOverlay.replaceChildren();
+  FOODS.forEach((food) => {
+    const itemEl = document.createElement("span");
+    itemEl.className = "munch-tray-food";
+    itemEl.innerHTML = `<img src="${food.src}" alt="" draggable="false">`;
+    munchTrayOverlay.append(itemEl);
   });
 }
 
