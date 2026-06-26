@@ -909,6 +909,11 @@ p {
     #071f2e;
 }
 
+.video-backdrop.is-final-reward {
+  padding: 0;
+  background: #071f2e;
+}
+
 .video-card {
   position: relative;
   display: grid;

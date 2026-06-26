@@ -729,6 +729,7 @@ function selectAnswer(answer) {
 
 async function handleCorrect(answer) {
   const current = QUESTIONS[state.questionIndex];
+  const shouldShowFinalReward = isFinalQuestion();
   state.selectedAnswerId = answer.id;
   state.wrongAnswerId = null;
   state.rewardCompleting = false;
@@ -759,22 +760,28 @@ async function handleCorrect(answer) {
 
   if (state.screen === "playing" && state.selectedFood != null) {
     window.setTimeout(
-      () => showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex }),
+      () => {
+        if (shouldShowFinalReward) {
+          markCurrentQuestionComplete();
+          showFinalRewardVideo();
+          return;
+        }
+        showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
+      },
       FEED_TIMING.resetAfterCorrectMs
     );
   }
 }
 
 function completeFood() {
-  state.completedQuestionIds.add(QUESTIONS[state.questionIndex].id);
-  state.stars = state.completedQuestionIds.size;
+  markCurrentQuestionComplete();
   state.promptSpeaking = false;
   repeatButton.disabled = false;
   clearRepeatTimer();
   gameScene.feedScale = state.stars;
   updateHud();
 
-  if (state.completedQuestionIds.size >= QUESTIONS.length) {
+  if (state.completedQuestionIds.size >= QUESTIONS.length || isFinalQuestion()) {
     state.locked = true;
     lockFoodTray(true);
     updateQuestionNav();
@@ -793,6 +800,15 @@ function completeFood() {
     gameScene.dragonMood = "idle";
     updateQuestionNav();
   }, 260);
+}
+
+function markCurrentQuestionComplete() {
+  state.completedQuestionIds.add(QUESTIONS[state.questionIndex].id);
+  state.stars = Math.max(state.stars, state.completedQuestionIds.size);
+}
+
+function isFinalQuestion() {
+  return state.questionIndex >= QUESTIONS.length - 1;
 }
 
 function startTriggerMotion() {
@@ -983,6 +999,7 @@ function showRewardVideo(src, posterSrc, options = {}) {
   videoPlayButton.hidden = true;
   videoPlayButton.textContent = "Play video";
   rewardVideoPanel.hidden = false;
+  rewardVideoPanel.classList.toggle("is-final-reward", state.rewardVideoKind === "final");
   rewardVideoCard?.classList.remove("is-playing");
   rewardVideoCard?.classList.toggle("is-final-reward", state.rewardVideoKind === "final");
   updateRewardVideoNav();
@@ -1181,6 +1198,7 @@ function resetRewardVideo() {
   }
   if (rewardVideoPanel) {
     rewardVideoPanel.hidden = true;
+    rewardVideoPanel.classList.remove("is-final-reward");
   }
   rewardVideoCard?.classList.remove("is-playing", "is-final-reward");
   if (videoPrevButton) videoPrevButton.hidden = true;
