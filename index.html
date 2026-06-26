@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Object Function Dragon Game</title>
+  </head>
+  <body>
+    <main id="app" class="app-shell">
+      <section id="start-screen" class="screen start-screen">
+        <div class="start-art" aria-hidden="true">
+          <canvas id="start-canvas"></canvas>
+        </div>
+        <div class="start-copy">
+          <p class="eyebrow">Object function practice</p>
+          <h1>Dragon Feeding Game</h1>
+          <p>Choose what we use.</p>
+        </div>
+        <button id="play-button" class="primary-button" type="button">
+          <span class="button-icon" aria-hidden="true"></span>
+          Play
+        </button>
+      </section>
+
+      <section id="game-screen" class="screen game-screen" hidden>
+        <div class="scene-wrap" aria-hidden="true">
+          <div class="storybook-bg"></div>
+          <canvas id="dragon-scene"></canvas>
+          <div id="dragon-puppet" class="dragon-puppet frame-idle-a">
+            <img class="dragon-frame dragon-frame-idle-a" src="/assets/dragon-frames/idle-a.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-idle-b" src="/assets/dragon-frames/idle-b.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-blink" src="/assets/dragon-frames/blink.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-ready" src="/assets/dragon-frames/ready.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-chew" src="/assets/dragon-frames/chew.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-happy" src="/assets/dragon-frames/happy.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-celebrate-a" src="/assets/dragon-frames/celebrate-a.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-celebrate-b" src="/assets/dragon-frames/celebrate-b.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-01" src="/assets/dragon-frames/dance-01.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-02" src="/assets/dragon-frames/dance-02.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-03" src="/assets/dragon-frames/dance-03.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-04" src="/assets/dragon-frames/dance-04.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-05" src="/assets/dragon-frames/dance-05.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-06" src="/assets/dragon-frames/dance-06.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-07" src="/assets/dragon-frames/dance-07.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-08" src="/assets/dragon-frames/dance-08.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-09" src="/assets/dragon-frames/dance-09.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-10" src="/assets/dragon-frames/dance-10.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-11" src="/assets/dragon-frames/dance-11.png" alt="" draggable="false" />
+            <img class="dragon-frame dragon-frame-dance-12" src="/assets/dragon-frames/dance-12.png" alt="" draggable="false" />
+            <span id="dragon-mouth-target" class="dragon-mouth-target"></span>
+            <span id="dragon-fire-breath" class="dragon-fire-breath" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </div>
+          <div class="sky-glow"></div>
+        </div>
+
+        <header class="game-header">
+          <div id="progress-pill" class="progress-pill">0 of 10</div>
+          <div id="stars-pill" class="stars-pill">0 stars</div>
+        </header>
+
+        <section id="food-tray" class="food-tray" aria-label="Food choices"></section>
+      </section>
+
+      <section id="question-panel" class="question-panel" hidden>
+        <div class="question-dialog" role="dialog" aria-modal="true" aria-labelledby="question-text">
+          <button id="repeat-button" class="audio-button" type="button" aria-label="Repeat question">
+            <span class="sound-icon" aria-hidden="true"></span>
+          </button>
+          <h2 id="question-text"></h2>
+          <div id="answers-grid" class="answers-grid" aria-label="Answer choices"></div>
+        </div>
+      </section>
+
+      <section id="reward-video-panel" class="video-backdrop" hidden>
+        <div class="video-card" role="dialog" aria-modal="true" aria-label="Reward video">
+          <button id="video-close-button" class="video-close" type="button" aria-label="Skip video">×</button>
+          <div class="reward-video-stage">
+            <video id="reward-video" class="reward-video" muted playsinline preload="metadata"></video>
+            <img id="reward-video-poster" class="reward-video-poster" alt="" draggable="false" />
+          </div>
+          <button id="video-play-button" class="secondary-button" type="button" hidden>Play video</button>
+          <div class="video-actions" aria-label="Reward video navigation">
+            <button id="video-prev-button" class="video-nav-button" type="button" aria-label="Previous video">
+              Previous
+            </button>
+            <button id="video-continue-button" class="secondary-button" type="button" hidden>Continue</button>
+            <button id="video-next-button" class="video-nav-button" type="button" aria-label="Next video">
+              Next
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="celebration-panel" class="celebration-panel" hidden>
+        <div class="celebration-card">
+          <p class="eyebrow">Great choosing</p>
+          <h1>You fed the dragon!</h1>
+          <div id="star-row" class="star-row" aria-label="Stars earned"></div>
+          <button id="play-again-button" class="primary-button" type="button">
+            <span class="reset-icon" aria-hidden="true"></span>
+            Play Again
+          </button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

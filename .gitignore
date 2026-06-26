@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.netlify/
+.DS_Store
+
+# Local scratch files from asset/video generation and browser checks.
+tmp/
+tmp-sfx/
+tmp-video-check/
+outputs/
+work/
+phone-preview/
+
+# Local environment and logs.
+.env
+.env.*
+*.log
