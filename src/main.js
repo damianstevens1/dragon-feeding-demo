@@ -31,6 +31,7 @@ const startScreen = document.querySelector("#start-screen");
 const gameScreen = document.querySelector("#game-screen");
 const questionPanel = document.querySelector("#question-panel");
 const rewardVideoPanel = document.querySelector("#reward-video-panel");
+const munchVideoPanel = document.querySelector("#munch-video-panel");
 const celebrationPanel = document.querySelector("#celebration-panel");
 const playButton = document.querySelector("#play-button");
 const playAgainButton = document.querySelector("#play-again-button");
@@ -51,6 +52,8 @@ const starRow = document.querySelector("#star-row");
 const rewardVideo = document.querySelector("#reward-video");
 const rewardVideoPoster = document.querySelector("#reward-video-poster");
 const rewardVideoCard = rewardVideoPanel?.querySelector(".video-card");
+const munchVideo = document.querySelector("#munch-video");
+const munchVideoPoster = document.querySelector("#munch-video-poster");
 const dragonPuppet = document.querySelector("#dragon-puppet");
 const dragonMouthTarget = document.querySelector("#dragon-mouth-target");
 const dragonFireBreath = document.querySelector("#dragon-fire-breath");
@@ -75,12 +78,18 @@ const state = {
   rewardVideoSkippable: false,
   rewardVideoKind: "card",
   rewardVideoIndex: 0,
+  munchReactionActive: false,
   completedQuestionIds: new Set()
 };
 
 const FINAL_REWARD_VIDEO = {
   src: "/assets/videos/final-dragon-reward.mp4",
   posterSrc: "/assets/videos/final-dragon-reward-poster.png"
+};
+
+const MUNCH_REACTION_VIDEO = {
+  src: "/assets/videos/dragon-munch-reaction.mp4",
+  posterSrc: "/assets/videos/dragon-munch-reaction-poster.png"
 };
 
 const FEED_TIMING = {
@@ -92,6 +101,7 @@ const FEED_TIMING = {
   wiggleDurationMs: 680,
   growDurationMs: 1150,
   fireBreathMs: 720,
+  munchReactionDelayMs: 980,
   resetAfterCorrectMs: 2550,
   taskCompleteDelayMs: 3500,
   celebrationMs: 24800,
@@ -225,6 +235,9 @@ let lastFrame = 0;
 let rewardVideoWatchdog = 0;
 let rewardVideoSkipTimer = 0;
 let finalRewardReturnTimer = 0;
+let munchReactionTimer = 0;
+let munchReactionWatchdog = 0;
+let pendingMunchComplete = null;
 
 const gameScene = makeScene(document.querySelector("#dragon-scene"));
 const startScene = makeScene(document.querySelector("#start-canvas"), { decorative: true });
@@ -269,6 +282,13 @@ rewardVideo.addEventListener("timeupdate", () => {
 rewardVideo.addEventListener("loadeddata", () => {
   if (state.rewardVideoActive && rewardVideo.paused) {
     videoPlayButton.hidden = false;
+  }
+});
+munchVideo?.addEventListener("ended", finishMunchReaction);
+munchVideo?.addEventListener("error", finishMunchReaction);
+munchVideo?.addEventListener("timeupdate", () => {
+  if (state.munchReactionActive && munchVideo.currentTime > 0.05) {
+    setMunchPosterVisible(false);
   }
 });
 window.addEventListener("resize", resizeAll);
@@ -381,9 +401,11 @@ async function startGame() {
   state.rewardVideoSkippable = false;
   state.rewardVideoKind = "card";
   state.rewardVideoIndex = 0;
+  state.munchReactionActive = false;
   state.completedQuestionIds = new Set();
   removeFlyingFood();
   resetRewardVideo();
+  resetMunchReaction();
   gameScene.dragonMood = "idle";
   gameScene.feedScale = 0;
   gameScene.displayScale = 0.5;
@@ -766,9 +788,11 @@ async function handleCorrect(answer) {
           showFinalRewardVideo();
           return;
         }
-        showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
+        showMunchReaction(() => {
+          showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
+        });
       },
-      FEED_TIMING.resetAfterCorrectMs
+      FEED_TIMING.munchReactionDelayMs
     );
   }
 }
@@ -897,8 +921,10 @@ function canNavigateQuestions() {
     && !state.locked
     && !state.promptSpeaking
     && !state.rewardVideoActive
+    && !state.munchReactionActive
     && questionPanel.hidden
-    && rewardVideoPanel.hidden;
+    && rewardVideoPanel.hidden
+    && (!munchVideoPanel || munchVideoPanel.hidden);
 }
 
 function navigateQuestion(direction) {
@@ -1008,6 +1034,82 @@ function showRewardVideo(src, posterSrc, options = {}) {
     if (state.rewardVideoActive) setRewardVideoSkippable(true);
   }, 2000);
   loadRewardVideoSource(src, posterSrc);
+}
+
+function showMunchReaction(onComplete) {
+  if (state.screen !== "playing" || !munchVideo || !munchVideoPanel) {
+    onComplete?.();
+    return;
+  }
+
+  state.munchReactionActive = true;
+  state.locked = true;
+  pendingMunchComplete = onComplete;
+  lockFoodTray(true);
+  updateQuestionNav();
+  clearMunchReactionTimers();
+
+  munchVideoPanel.hidden = false;
+  munchVideoPanel.classList.remove("is-playing");
+  munchVideoPoster.src = MUNCH_REACTION_VIDEO.posterSrc;
+  munchVideoPoster.hidden = false;
+
+  munchVideo.pause();
+  munchVideo.muted = true;
+  munchVideo.playsInline = true;
+  munchVideo.controls = false;
+  munchVideo.disablePictureInPicture = true;
+  munchVideo.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
+  munchVideo.setAttribute("playsinline", "");
+  munchVideo.setAttribute("webkit-playsinline", "");
+  munchVideo.removeAttribute("controls");
+  munchVideo.poster = MUNCH_REACTION_VIDEO.posterSrc;
+  munchVideo.src = MUNCH_REACTION_VIDEO.src;
+  munchVideo.currentTime = 0;
+  munchVideo.load();
+
+  munchReactionWatchdog = window.setTimeout(finishMunchReaction, 5200);
+  const played = munchVideo.play();
+  if (played && typeof played.catch === "function") {
+    played.catch(() => {
+      munchReactionTimer = window.setTimeout(finishMunchReaction, 1100);
+    });
+  }
+}
+
+function finishMunchReaction() {
+  if (!state.munchReactionActive) return;
+  const onComplete = pendingMunchComplete;
+  resetMunchReaction();
+  onComplete?.();
+}
+
+function resetMunchReaction() {
+  state.munchReactionActive = false;
+  pendingMunchComplete = null;
+  clearMunchReactionTimers();
+  if (munchVideo) {
+    munchVideo.pause();
+    munchVideo.removeAttribute("src");
+    munchVideo.removeAttribute("poster");
+    munchVideo.removeAttribute("controls");
+    munchVideo.load();
+  }
+  if (munchVideoPoster) {
+    munchVideoPoster.removeAttribute("src");
+    munchVideoPoster.hidden = true;
+  }
+  if (munchVideoPanel) {
+    munchVideoPanel.hidden = true;
+    munchVideoPanel.classList.remove("is-playing");
+  }
+}
+
+function setMunchPosterVisible(visible) {
+  munchVideoPanel?.classList.toggle("is-playing", !visible);
+  if (munchVideoPoster) {
+    munchVideoPoster.hidden = !visible && !munchVideoPoster.src;
+  }
 }
 
 function loadRewardVideoSource(src, posterSrc) {
@@ -1217,9 +1319,21 @@ function clearTimers() {
   clearRepeatTimer();
   clearRewardVideoSkipTimer();
   clearFinalRewardReturnTimer();
+  clearMunchReactionTimers();
   if (fireBreathTimer) {
     window.clearTimeout(fireBreathTimer);
     fireBreathTimer = 0;
+  }
+}
+
+function clearMunchReactionTimers() {
+  if (munchReactionTimer) {
+    window.clearTimeout(munchReactionTimer);
+    munchReactionTimer = 0;
+  }
+  if (munchReactionWatchdog) {
+    window.clearTimeout(munchReactionWatchdog);
+    munchReactionWatchdog = 0;
   }
 }
 

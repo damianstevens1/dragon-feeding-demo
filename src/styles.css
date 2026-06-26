@@ -1051,6 +1051,38 @@ p {
   transform: translateX(-50%);
 }
 
+.munch-video-panel {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  overflow: hidden;
+  background: #071f2e;
+}
+
+.munch-video,
+.munch-video-poster {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #071f2e;
+}
+
+.munch-video {
+  pointer-events: none;
+}
+
+.munch-video-poster {
+  z-index: 1;
+  transition: opacity 140ms ease;
+}
+
+.munch-video-panel.is-playing .munch-video-poster {
+  opacity: 0;
+}
+
 .video-nav-button {
   display: grid;
   width: 100%;
