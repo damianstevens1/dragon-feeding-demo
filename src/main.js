@@ -422,6 +422,7 @@ async function startGame() {
   rewardVideoPanel.hidden = true;
   celebrationPanel.hidden = true;
   renderFoodTray();
+  primeMunchReactionVideo();
   updateHud();
   updateQuestionNav();
   resizeAll();
@@ -470,6 +471,29 @@ function getFedFoodIds() {
     }
   });
   return fedFoodIds;
+}
+
+function configureMunchVideoForInlinePlayback() {
+  if (!munchVideo) return;
+  munchVideo.muted = true;
+  munchVideo.playsInline = true;
+  munchVideo.controls = false;
+  munchVideo.disablePictureInPicture = true;
+  munchVideo.preload = "auto";
+  munchVideo.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
+  munchVideo.setAttribute("playsinline", "");
+  munchVideo.setAttribute("webkit-playsinline", "");
+  munchVideo.removeAttribute("controls");
+}
+
+function primeMunchReactionVideo() {
+  if (!munchVideo) return;
+  configureMunchVideoForInlinePlayback();
+  munchVideo.poster = MUNCH_REACTION_VIDEO.posterSrc;
+  if (munchVideo.getAttribute("src") !== MUNCH_REACTION_VIDEO.src) {
+    munchVideo.src = MUNCH_REACTION_VIDEO.src;
+    munchVideo.load();
+  }
 }
 
 function addFoodPointerHandlers(foodEl) {
@@ -1079,18 +1103,13 @@ function showMunchReaction(onComplete) {
   munchVideoPoster.hidden = false;
 
   munchVideo.pause();
-  munchVideo.muted = true;
-  munchVideo.playsInline = true;
-  munchVideo.controls = false;
-  munchVideo.disablePictureInPicture = true;
-  munchVideo.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
-  munchVideo.setAttribute("playsinline", "");
-  munchVideo.setAttribute("webkit-playsinline", "");
-  munchVideo.removeAttribute("controls");
+  configureMunchVideoForInlinePlayback();
   munchVideo.poster = MUNCH_REACTION_VIDEO.posterSrc;
-  munchVideo.src = MUNCH_REACTION_VIDEO.src;
+  if (munchVideo.getAttribute("src") !== MUNCH_REACTION_VIDEO.src) {
+    munchVideo.src = MUNCH_REACTION_VIDEO.src;
+    munchVideo.load();
+  }
   munchVideo.currentTime = 0;
-  munchVideo.load();
 
   munchReactionWatchdog = window.setTimeout(finishMunchReaction, 5200);
   const played = munchVideo.play();
@@ -1114,10 +1133,14 @@ function resetMunchReaction() {
   clearMunchReactionTimers();
   if (munchVideo) {
     munchVideo.pause();
-    munchVideo.removeAttribute("src");
     munchVideo.removeAttribute("poster");
     munchVideo.removeAttribute("controls");
-    munchVideo.load();
+    configureMunchVideoForInlinePlayback();
+    try {
+      munchVideo.currentTime = 0;
+    } catch {
+      // Some mobile browsers reject seeking while the hidden video is being recycled.
+    }
   }
   if (munchVideoPoster) {
     munchVideoPoster.removeAttribute("src");
