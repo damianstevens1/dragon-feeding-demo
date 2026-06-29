@@ -31,7 +31,6 @@ const startScreen = document.querySelector("#start-screen");
 const gameScreen = document.querySelector("#game-screen");
 const questionPanel = document.querySelector("#question-panel");
 const rewardVideoPanel = document.querySelector("#reward-video-panel");
-const munchVideoPanel = document.querySelector("#munch-video-panel");
 const celebrationPanel = document.querySelector("#celebration-panel");
 const playButton = document.querySelector("#play-button");
 const playAgainButton = document.querySelector("#play-again-button");
@@ -52,9 +51,6 @@ const starRow = document.querySelector("#star-row");
 const rewardVideo = document.querySelector("#reward-video");
 const rewardVideoPoster = document.querySelector("#reward-video-poster");
 const rewardVideoCard = rewardVideoPanel?.querySelector(".video-card");
-const munchVideo = document.querySelector("#munch-video");
-const munchVideoPoster = document.querySelector("#munch-video-poster");
-const munchTrayOverlay = document.querySelector("#munch-tray-overlay");
 const dragonPuppet = document.querySelector("#dragon-puppet");
 const dragonMouthTarget = document.querySelector("#dragon-mouth-target");
 const dragonFireBreath = document.querySelector("#dragon-fire-breath");
@@ -79,18 +75,12 @@ const state = {
   rewardVideoSkippable: false,
   rewardVideoKind: "card",
   rewardVideoIndex: 0,
-  munchReactionActive: false,
   completedQuestionIds: new Set()
 };
 
 const FINAL_REWARD_VIDEO = {
   src: "/assets/videos/final-dragon-reward.mp4",
   posterSrc: "/assets/videos/final-dragon-reward-poster.png"
-};
-
-const MUNCH_REACTION_VIDEO = {
-  src: "/assets/videos/dragon-munch-reaction.mp4",
-  posterSrc: "/assets/videos/dragon-munch-reaction-poster.png"
 };
 
 const FEED_TIMING = {
@@ -235,9 +225,6 @@ let lastFrame = 0;
 let rewardVideoWatchdog = 0;
 let rewardVideoSkipTimer = 0;
 let finalRewardReturnTimer = 0;
-let munchReactionTimer = 0;
-let munchReactionWatchdog = 0;
-let pendingMunchComplete = null;
 
 const gameScene = makeScene(document.querySelector("#dragon-scene"));
 const startScene = makeScene(document.querySelector("#start-canvas"), { decorative: true });
@@ -284,17 +271,9 @@ rewardVideo.addEventListener("loadeddata", () => {
     videoPlayButton.hidden = false;
   }
 });
-munchVideo?.addEventListener("ended", finishMunchReaction);
-munchVideo?.addEventListener("error", finishMunchReaction);
-munchVideo?.addEventListener("timeupdate", () => {
-  if (state.munchReactionActive && munchVideo.currentTime > 0.05) {
-    setMunchPosterVisible(false);
-  }
-});
 window.addEventListener("resize", resizeAll);
 
 renderFoodTray();
-renderMunchTrayOverlay();
 resizeAll();
 animate(0);
 
@@ -402,11 +381,9 @@ async function startGame() {
   state.rewardVideoSkippable = false;
   state.rewardVideoKind = "card";
   state.rewardVideoIndex = 0;
-  state.munchReactionActive = false;
   state.completedQuestionIds = new Set();
   removeFlyingFood();
   resetRewardVideo();
-  resetMunchReaction();
   gameScene.dragonMood = "idle";
   gameScene.feedScale = 0;
   gameScene.displayScale = 0.5;
@@ -422,7 +399,6 @@ async function startGame() {
   rewardVideoPanel.hidden = true;
   celebrationPanel.hidden = true;
   renderFoodTray();
-  primeMunchReactionVideo();
   updateHud();
   updateQuestionNav();
   resizeAll();
@@ -447,53 +423,6 @@ function renderFoodTray() {
     addFoodPointerHandlers(button);
     foodTray.append(button);
   });
-}
-
-function renderMunchTrayOverlay() {
-  if (!munchTrayOverlay) return;
-  munchTrayOverlay.replaceChildren();
-  const fedFoodIds = getFedFoodIds();
-  FOODS.forEach((food) => {
-    const itemEl = document.createElement("span");
-    itemEl.className = "munch-tray-food";
-    if (fedFoodIds.has(food.id)) itemEl.classList.add("is-hidden");
-    itemEl.innerHTML = `<img src="${food.src}" alt="" draggable="false">`;
-    munchTrayOverlay.append(itemEl);
-  });
-}
-
-function getFedFoodIds() {
-  const fedFoodIds = new Set();
-  [...foodTray.children].forEach((foodEl) => {
-    const index = Number(foodEl.dataset.index);
-    if (foodEl.classList.contains("is-fed") && FOODS[index]) {
-      fedFoodIds.add(FOODS[index].id);
-    }
-  });
-  return fedFoodIds;
-}
-
-function configureMunchVideoForInlinePlayback() {
-  if (!munchVideo) return;
-  munchVideo.muted = true;
-  munchVideo.playsInline = true;
-  munchVideo.controls = false;
-  munchVideo.disablePictureInPicture = true;
-  munchVideo.preload = "auto";
-  munchVideo.setAttribute("controlsList", "nodownload nofullscreen noremoteplayback");
-  munchVideo.setAttribute("playsinline", "");
-  munchVideo.setAttribute("webkit-playsinline", "");
-  munchVideo.removeAttribute("controls");
-}
-
-function primeMunchReactionVideo() {
-  if (!munchVideo) return;
-  configureMunchVideoForInlinePlayback();
-  munchVideo.poster = MUNCH_REACTION_VIDEO.posterSrc;
-  if (munchVideo.getAttribute("src") !== MUNCH_REACTION_VIDEO.src) {
-    munchVideo.src = MUNCH_REACTION_VIDEO.src;
-    munchVideo.load();
-  }
 }
 
 function addFoodPointerHandlers(foodEl) {
@@ -968,10 +897,8 @@ function canNavigateQuestions() {
     && !state.locked
     && !state.promptSpeaking
     && !state.rewardVideoActive
-    && !state.munchReactionActive
     && questionPanel.hidden
-    && rewardVideoPanel.hidden
-    && (!munchVideoPanel || munchVideoPanel.hidden);
+    && rewardVideoPanel.hidden;
 }
 
 function navigateQuestion(direction) {
@@ -1081,82 +1008,6 @@ function showRewardVideo(src, posterSrc, options = {}) {
     if (state.rewardVideoActive) setRewardVideoSkippable(true);
   }, 2000);
   loadRewardVideoSource(src, posterSrc);
-}
-
-function showMunchReaction(onComplete) {
-  if (state.screen !== "playing" || !munchVideo || !munchVideoPanel) {
-    onComplete?.();
-    return;
-  }
-
-  state.munchReactionActive = true;
-  state.locked = true;
-  pendingMunchComplete = onComplete;
-  lockFoodTray(true);
-  updateQuestionNav();
-  clearMunchReactionTimers();
-  renderMunchTrayOverlay();
-
-  munchVideoPanel.hidden = false;
-  munchVideoPanel.classList.remove("is-playing");
-  munchVideoPoster.src = MUNCH_REACTION_VIDEO.posterSrc;
-  munchVideoPoster.hidden = false;
-
-  munchVideo.pause();
-  configureMunchVideoForInlinePlayback();
-  munchVideo.poster = MUNCH_REACTION_VIDEO.posterSrc;
-  if (munchVideo.getAttribute("src") !== MUNCH_REACTION_VIDEO.src) {
-    munchVideo.src = MUNCH_REACTION_VIDEO.src;
-    munchVideo.load();
-  }
-  munchVideo.currentTime = 0;
-
-  munchReactionWatchdog = window.setTimeout(finishMunchReaction, 5200);
-  const played = munchVideo.play();
-  if (played && typeof played.catch === "function") {
-    played.catch(() => {
-      munchReactionTimer = window.setTimeout(finishMunchReaction, 1100);
-    });
-  }
-}
-
-function finishMunchReaction() {
-  if (!state.munchReactionActive) return;
-  const onComplete = pendingMunchComplete;
-  resetMunchReaction();
-  onComplete?.();
-}
-
-function resetMunchReaction() {
-  state.munchReactionActive = false;
-  pendingMunchComplete = null;
-  clearMunchReactionTimers();
-  if (munchVideo) {
-    munchVideo.pause();
-    munchVideo.removeAttribute("poster");
-    munchVideo.removeAttribute("controls");
-    configureMunchVideoForInlinePlayback();
-    try {
-      munchVideo.currentTime = 0;
-    } catch {
-      // Some mobile browsers reject seeking while the hidden video is being recycled.
-    }
-  }
-  if (munchVideoPoster) {
-    munchVideoPoster.removeAttribute("src");
-    munchVideoPoster.hidden = true;
-  }
-  if (munchVideoPanel) {
-    munchVideoPanel.hidden = true;
-    munchVideoPanel.classList.remove("is-playing");
-  }
-}
-
-function setMunchPosterVisible(visible) {
-  munchVideoPanel?.classList.toggle("is-playing", !visible);
-  if (munchVideoPoster) {
-    munchVideoPoster.hidden = !visible && !munchVideoPoster.src;
-  }
 }
 
 function loadRewardVideoSource(src, posterSrc) {
@@ -1322,9 +1173,7 @@ function completeRewardVideo() {
     if (rewardVideoKind === "final") {
       resetAfterTaskCompleted();
     } else {
-      showMunchReaction(() => {
-        completeFood();
-      });
+      completeFood();
     }
   }
   state.rewardCompleting = false;
@@ -1368,21 +1217,9 @@ function clearTimers() {
   clearRepeatTimer();
   clearRewardVideoSkipTimer();
   clearFinalRewardReturnTimer();
-  clearMunchReactionTimers();
   if (fireBreathTimer) {
     window.clearTimeout(fireBreathTimer);
     fireBreathTimer = 0;
-  }
-}
-
-function clearMunchReactionTimers() {
-  if (munchReactionTimer) {
-    window.clearTimeout(munchReactionTimer);
-    munchReactionTimer = 0;
-  }
-  if (munchReactionWatchdog) {
-    window.clearTimeout(munchReactionWatchdog);
-    munchReactionWatchdog = 0;
   }
 }
 
