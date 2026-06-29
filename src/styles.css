@@ -1099,7 +1099,10 @@ p {
   aspect-ratio: 1147 / 420;
   padding: 10.6% 11.2% 13.6%;
   background: url("/assets/higgsfield/food-tray-platform.png") center / 100% 100% no-repeat;
-  filter: drop-shadow(0 18px 18px rgba(9, 27, 42, 0.32));
+  filter:
+    brightness(1.06)
+    saturate(0.96)
+    drop-shadow(0 18px 18px rgba(9, 27, 42, 0.32));
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -1113,13 +1116,17 @@ p {
 
 .munch-tray-food img {
   display: block;
-  width: 124%;
-  height: 124%;
+  width: 146%;
+  height: 146%;
   object-fit: contain;
   filter:
     drop-shadow(0 10px 9px rgba(21, 24, 55, 0.24))
     saturate(1.1)
     contrast(1.03);
+}
+
+.munch-tray-food.is-hidden img {
+  opacity: 0;
 }
 
 .video-nav-button {

@@ -102,7 +102,6 @@ const FEED_TIMING = {
   wiggleDurationMs: 680,
   growDurationMs: 1150,
   fireBreathMs: 720,
-  munchReactionDelayMs: 980,
   resetAfterCorrectMs: 2550,
   taskCompleteDelayMs: 3500,
   celebrationMs: 24800,
@@ -452,12 +451,25 @@ function renderFoodTray() {
 function renderMunchTrayOverlay() {
   if (!munchTrayOverlay) return;
   munchTrayOverlay.replaceChildren();
+  const fedFoodIds = getFedFoodIds();
   FOODS.forEach((food) => {
     const itemEl = document.createElement("span");
     itemEl.className = "munch-tray-food";
+    if (fedFoodIds.has(food.id)) itemEl.classList.add("is-hidden");
     itemEl.innerHTML = `<img src="${food.src}" alt="" draggable="false">`;
     munchTrayOverlay.append(itemEl);
   });
+}
+
+function getFedFoodIds() {
+  const fedFoodIds = new Set();
+  [...foodTray.children].forEach((foodEl) => {
+    const index = Number(foodEl.dataset.index);
+    if (foodEl.classList.contains("is-fed") && FOODS[index]) {
+      fedFoodIds.add(FOODS[index].id);
+    }
+  });
+  return fedFoodIds;
 }
 
 function addFoodPointerHandlers(foodEl) {
@@ -801,11 +813,9 @@ async function handleCorrect(answer) {
           showFinalRewardVideo();
           return;
         }
-        showMunchReaction(() => {
-          showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
-        });
+        showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
       },
-      FEED_TIMING.munchReactionDelayMs
+      FEED_TIMING.resetAfterCorrectMs
     );
   }
 }
@@ -1061,6 +1071,7 @@ function showMunchReaction(onComplete) {
   lockFoodTray(true);
   updateQuestionNav();
   clearMunchReactionTimers();
+  renderMunchTrayOverlay();
 
   munchVideoPanel.hidden = false;
   munchVideoPanel.classList.remove("is-playing");
@@ -1288,7 +1299,9 @@ function completeRewardVideo() {
     if (rewardVideoKind === "final") {
       resetAfterTaskCompleted();
     } else {
-      completeFood();
+      showMunchReaction(() => {
+        completeFood();
+      });
     }
   }
   state.rewardCompleting = false;
