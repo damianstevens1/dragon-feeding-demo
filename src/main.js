@@ -536,10 +536,9 @@ async function startGame() {
 
 function renderFoodTray() {
   foodTray.replaceChildren();
-  const trayCount = Math.max(FOODS.length, QUESTIONS.length || FOODS.length);
-  foodTray.classList.toggle("is-long-run", trayCount > FOODS.length);
-  foodTray.classList.toggle("is-extra-long-run", trayCount > FOODS.length * 2);
-  foodTray.style.setProperty("--tray-columns", trayCount > FOODS.length ? "8" : "5");
+  const trayCount = getVisibleFoodCount();
+  foodTray.classList.remove("is-long-run", "is-extra-long-run");
+  foodTray.style.setProperty("--tray-columns", "5");
   Array.from({ length: trayCount }, (_, index) => FOODS[index % FOODS.length]).forEach((food, index) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -557,6 +556,11 @@ function renderFoodTray() {
     addFoodPointerHandlers(button);
     foodTray.append(button);
   });
+}
+
+function getVisibleFoodCount() {
+  const remainingQuestions = Math.max(1, QUESTIONS.length - state.completedQuestionIds.size);
+  return Math.min(FOODS.length, remainingQuestions);
 }
 
 function addFoodPointerHandlers(foodEl) {
@@ -948,6 +952,7 @@ function completeFood() {
     return;
   }
 
+  const shouldRefillFoodTray = ![...foodTray.children].some((foodEl) => !foodEl.classList.contains("is-fed"));
   state.questionIndex = getNextQuestionIndex(state.questionIndex, 1);
   updateHud();
   window.setTimeout(() => {
@@ -955,6 +960,7 @@ function completeFood() {
     state.selectedFood = null;
     state.selectedSourceRect = null;
     state.selectedAnswerId = null;
+    if (shouldRefillFoodTray) renderFoodTray();
     lockFoodTray(false);
     gameScene.dragonMood = "idle";
     updateQuestionNav();
