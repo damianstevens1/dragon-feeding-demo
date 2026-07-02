@@ -1297,33 +1297,11 @@ p {
   }
 
   .food-spot::before {
-    left: 50%;
-    top: 60%;
-    width: 96%;
-    height: 66%;
-    background:
-      radial-gradient(ellipse at 46% 24%, rgba(255, 238, 161, 0.96), rgba(227, 156, 61, 0.92) 44%, rgba(162, 91, 35, 0.96) 78%),
-      linear-gradient(180deg, rgba(255, 216, 124, 0.98), rgba(171, 92, 33, 0.98));
-    opacity: 1;
-    box-shadow:
-      inset 0 2px 5px rgba(255, 249, 190, 0.62),
-      inset 0 -6px 8px rgba(93, 42, 17, 0.24),
-      0 5px 7px rgba(60, 29, 15, 0.24);
-    transform: translate(-50%, -50%);
+    display: none;
   }
 
   .food-spot::after {
-    display: block;
-    left: 50%;
-    top: 60%;
-    right: auto;
-    width: 88%;
-    height: 56%;
-    border-radius: 50%;
-    background: radial-gradient(ellipse at 45% 28%, rgba(255, 245, 178, 0.48), transparent 58%);
-    box-shadow: none;
-    opacity: 0.86;
-    transform: translate(-50%, -50%);
+    display: none;
   }
 
   .food-thumb {
@@ -1331,15 +1309,13 @@ p {
     height: 116%;
     opacity: 1;
     transform: translateY(-7px);
-    filter:
-      drop-shadow(0 12px 13px rgba(21, 24, 55, 0.25))
-      saturate(1.12)
-      contrast(1.04);
+    filter: saturate(1.12) contrast(1.04);
   }
 
   .food-item:hover .food-thumb,
   .food-item:focus-visible .food-thumb {
     transform: translateY(-8px) scale(1.03);
+    filter: saturate(1.12) contrast(1.04);
   }
 
   .food-item.is-selected .food-spot::before,
