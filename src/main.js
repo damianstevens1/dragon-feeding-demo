@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import "./styles.css";
 
-const QUESTIONS = [
+const OBJECT_FUNCTION_QUESTIONS = [
   question("q07", "What do we use to stay dry in the rain?", item("umbrella"), [item("cookie"), item("chair")], "We use an umbrella to stay dry in the rain."),
   question("q08", "What do we use to brush our teeth?", item("toothbrush"), [item("toy-truck", "toy truck"), item("banana")], "We use a toothbrush to brush our teeth."),
   question("q12", "What do we use to eat soup?", item("spoon"), [item("ball"), item("hat")], "We use a spoon to eat soup."),
@@ -13,6 +13,49 @@ const QUESTIONS = [
   question("q05", "What do we use to cut paper?", item("scissors"), [item("shoe"), item("cup")], "We use scissors to cut paper."),
   question("q02", "What do we use to sweep the floor?", item("broom"), [item("cupcake"), item("toy-car", "toy car")], "We use a broom to sweep the floor.")
 ];
+
+const YES_NO_QUESTIONS = [
+  yesNoQuestion("yn01", "Is this a donut? Yes or no?", "pizza", "no", "No! It's not a donut. It's pizza.", "pizza"),
+  yesNoQuestion("yn02", "Is this a donut? Yes or no?", "donut", "yes", "Yes! It's a donut.", "donut"),
+  yesNoQuestion("yn03", "Is this a toothbrush? Yes or no?", "toothbrush", "yes", "Yes! It's a toothbrush.", "toothbrush"),
+  yesNoQuestion("yn04", "Is this a fork? Yes or no?", "spoon", "no", "No! It's not a fork. It's a spoon.", "spoon"),
+  yesNoQuestion("yn05", "Is this a banana? Yes or no?", "apple", "no", "No! It's not a banana. It's an apple.", "apple"),
+  yesNoQuestion("yn06", "Is this a banana? Yes or no?", "banana", "yes", "Yes! It's a banana.", "banana"),
+  yesNoQuestion("yn07", "Is this a ball? Yes or no?", "ball", "yes", "Yes! It's a ball.", "ball"),
+  yesNoQuestion("yn08", "Is this a cupcake? Yes or no?", "cookie", "no", "No! It's not a cupcake. It's a cookie.", "cookie"),
+  yesNoQuestion("yn09", "Is this a teddy bear? Yes or no?", "teddy-bear", "yes", "Yes! It's a teddy bear.", "teddy bear"),
+  yesNoQuestion("yn10", "Is this a phone? Yes or no?", "toy-car", "no", "No! It's not a phone. It's a toy car.", "toy car"),
+  yesNoQuestion("yn11", "Is this a train? Yes or no?", "toy-train", "yes", "Yes! It's a train.", "train"),
+  yesNoQuestion("yn12", "Is this a rocket? Yes or no?", "toy-rocket", "yes", "Yes! It's a rocket.", "rocket"),
+  yesNoQuestion("yn13", "Is this a duck? Yes or no?", "rubber-duck", "yes", "Yes! It's a duck.", "duck"),
+  yesNoQuestion("yn14", "Is this a robot? Yes or no?", "toy-robot", "yes", "Yes! It's a robot.", "robot"),
+  yesNoQuestion("yn15", "Are these blocks? Yes or no?", "toy-blocks", "yes", "Yes! They're blocks.", "blocks"),
+  yesNoQuestion("yn16", "Is this a boat? Yes or no?", "toy-airplane", "no", "No! It's not a boat. It's an airplane.", "airplane"),
+  yesNoQuestion("yn17", "Is this a car? Yes or no?", "toy-boat", "no", "No! It's not a car. It's a boat.", "boat"),
+  yesNoQuestion("yn18", "Is this an elephant? Yes or no?", "dinosaur-toy", "no", "No! It's not an elephant. It's a dinosaur.", "dinosaur"),
+  yesNoQuestion("yn19", "Is this a ball? Yes or no?", "drum", "no", "No! It's not a ball. It's a drum.", "drum"),
+  yesNoQuestion("yn20", "Is this a book? Yes or no?", "kite", "no", "No! It's not a book. It's a kite.", "kite")
+];
+
+const GAME_MODES = {
+  object: {
+    label: "Object Functions",
+    description: "Choose what we use.",
+    questions: OBJECT_FUNCTION_QUESTIONS
+  },
+  yesno: {
+    label: "Yes/No Questions",
+    description: "Look, listen, and choose yes or no.",
+    questions: YES_NO_QUESTIONS
+  },
+  mixed: {
+    label: "Mixed Practice",
+    description: "Practice both kinds of questions.",
+    questions: [...OBJECT_FUNCTION_QUESTIONS, ...YES_NO_QUESTIONS]
+  }
+};
+
+let QUESTIONS = shuffleQuestions(OBJECT_FUNCTION_QUESTIONS);
 
 const FOODS = [
   { id: "apple", label: "apple", src: "/assets/images/snacks/apple.png" },
@@ -42,8 +85,11 @@ const videoPrevButton = document.querySelector("#video-prev-button");
 const videoNextButton = document.querySelector("#video-next-button");
 const questionPrevButton = document.querySelector("#question-prev-button");
 const questionNextButton = document.querySelector("#question-next-button");
+const modeButtons = [...document.querySelectorAll(".mode-button")];
 const musicMuteButtons = [...document.querySelectorAll(".music-mute-button")];
 const voiceMuteButtons = [...document.querySelectorAll(".voice-mute-button")];
+const startEyebrow = document.querySelector("#start-eyebrow");
+const startDescription = document.querySelector("#start-description");
 const progressPill = document.querySelector("#progress-pill");
 const starsPill = document.querySelector("#stars-pill");
 const questionText = document.querySelector("#question-text");
@@ -82,6 +128,8 @@ const state = {
   rewardVideoSkippable: false,
   rewardVideoKind: "card",
   rewardVideoIndex: 0,
+  selectedGameMode: "object",
+  gameMode: "object",
   musicMuted: readStoredAudioPreference(AUDIO_PREF_KEYS.musicMuted),
   voiceMuted: readStoredAudioPreference(AUDIO_PREF_KEYS.voiceMuted),
   completedQuestionIds: new Set()
@@ -254,6 +302,9 @@ videoPrevButton.addEventListener("click", () => changeRewardVideo(-1));
 videoNextButton.addEventListener("click", advanceRewardVideo);
 questionPrevButton.addEventListener("click", () => navigateQuestion(-1));
 questionNextButton.addEventListener("click", () => navigateQuestion(1));
+modeButtons.forEach((button) => {
+  button.addEventListener("click", () => setSelectedGameMode(button.dataset.mode));
+});
 musicMuteButtons.forEach((button) => {
   button.addEventListener("click", () => setMusicMuted(!state.musicMuted));
 });
@@ -289,6 +340,7 @@ rewardVideo.addEventListener("loadeddata", () => {
 window.addEventListener("resize", resizeAll);
 
 renderFoodTray();
+updateModeSelectionUI();
 updateAudioControls();
 resizeAll();
 animate(0);
@@ -354,6 +406,7 @@ function question(id, text, correct, wrong, answerSentence) {
   const number = id.replace("q", "");
   return {
     id,
+    type: "object",
     question: text,
     correct,
     wrong,
@@ -365,12 +418,65 @@ function question(id, text, correct, wrong, answerSentence) {
   };
 }
 
+function yesNoQuestion(id, text, imageId, answer, answerSentence, actual) {
+  const correct = yesNoChoice(answer);
+  const wrong = yesNoChoice(answer === "yes" ? "no" : "yes");
+  return {
+    id,
+    type: "yesno",
+    question: text,
+    correct,
+    wrong: [wrong],
+    answerSentence,
+    questionAudioSrc: `/assets/audio/yes-no/${id}-q.mp3`,
+    answerAudioSrc: `/assets/audio/yes-no/${id}-a.mp3`,
+    imageSrc: `/assets/images/yes-no-3d/${imageId}.jpg`,
+    imageAlt: actual
+  };
+}
+
+function yesNoChoice(id) {
+  return {
+    id,
+    label: id === "yes" ? "Yes" : "No"
+  };
+}
+
 function item(id, label = id.replace(/-/g, " ")) {
   return {
     id,
     label,
     imageSrc: `/assets/images/${id}.jpg`
   };
+}
+
+function shuffleQuestions(questions) {
+  const shuffled = [...questions];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function getMode(mode) {
+  return GAME_MODES[mode] ?? GAME_MODES.object;
+}
+
+function setSelectedGameMode(mode) {
+  state.selectedGameMode = GAME_MODES[mode] ? mode : "object";
+  updateModeSelectionUI();
+}
+
+function updateModeSelectionUI() {
+  const mode = getMode(state.selectedGameMode);
+  modeButtons.forEach((button) => {
+    const selected = button.dataset.mode === state.selectedGameMode;
+    button.classList.toggle("is-selected", selected);
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+  });
+  if (startEyebrow) startEyebrow.textContent = "Choose a practice game";
+  if (startDescription) startDescription.textContent = mode.description;
 }
 
 async function startGame() {
@@ -380,6 +486,8 @@ async function startGame() {
   stopSpokenAudio();
   stopDragonAmbience();
   clearTimers();
+  state.gameMode = state.selectedGameMode;
+  QUESTIONS = shuffleQuestions(getMode(state.gameMode).questions);
   state.screen = "playing";
   state.questionIndex = 0;
   state.stars = 0;
@@ -673,39 +781,59 @@ function getMouthPoint() {
 
 function openQuestion() {
   const current = QUESTIONS[state.questionIndex];
-  const answers = shuffle([current.correct, ...current.wrong], current.id);
   questionText.textContent = current.question;
   answersGrid.replaceChildren();
+  answersGrid.className = current.type === "yesno" ? "answers-grid yes-no-grid" : "answers-grid";
 
-  answers.forEach((answer) => {
-    const button = document.createElement("button");
-    const answerState =
-      state.selectedAnswerId === answer.id ? "correct" : state.wrongAnswerId === answer.id ? "wrong" : "idle";
-    button.type = "button";
-    button.className = `answer-card answer-${answerState}`;
-    button.disabled = state.promptSpeaking;
-    button.setAttribute("aria-label", answer.label);
-    button.innerHTML = `
-      <span class="answer-image-frame">
-        <img src="${answer.imageSrc}" alt="" draggable="false">
-      </span>
-      <span class="answer-label"></span>
-      <span class="answer-check" aria-hidden="true"></span>
+  if (current.type === "yesno") {
+    const imageCard = document.createElement("figure");
+    imageCard.className = "yes-no-photo-card";
+    imageCard.innerHTML = `
+      <img src="${current.imageSrc}" alt="${current.imageAlt ?? ""}" draggable="false">
     `;
-    button.querySelector(".answer-label").textContent = answer.label;
-    button.addEventListener("click", () => selectAnswer(answer));
-    answersGrid.append(button);
-  });
+    answersGrid.append(imageCard);
+    [yesNoChoice("yes"), yesNoChoice("no")].forEach((answer) => {
+      answersGrid.append(createAnswerButton(answer, current, "yes-no-answer"));
+    });
+  } else {
+    const answers = shuffle([current.correct, ...current.wrong], current.id);
+    answers.forEach((answer) => {
+      answersGrid.append(createAnswerButton(answer, current));
+    });
+  }
 
   questionPanel.hidden = false;
   updateQuestionNav();
   void playQuestionPrompt(0);
 }
 
+function createAnswerButton(answer, current, extraClass = "") {
+    const button = document.createElement("button");
+    const answerState =
+      state.selectedAnswerId === answer.id ? "correct" : state.wrongAnswerId === answer.id ? "wrong" : "idle";
+    button.type = "button";
+    button.className = `answer-card answer-${answerState} ${extraClass}`.trim();
+    button.disabled = state.promptSpeaking;
+    button.setAttribute("aria-label", answer.label);
+    button.innerHTML = current.type === "yesno" ? `
+      <span class="yes-no-word">${answer.label}</span>
+      <span class="answer-check" aria-hidden="true"></span>
+    ` : `
+      <span class="answer-image-frame">
+        <img src="${answer.imageSrc}" alt="" draggable="false">
+      </span>
+      <span class="answer-label"></span>
+      <span class="answer-check" aria-hidden="true"></span>
+    `;
+    button.querySelector(".answer-label")?.append(answer.label);
+    button.addEventListener("click", () => selectAnswer(answer));
+    return button;
+}
+
 function rerenderAnswersOnly() {
   if (questionPanel.hidden) return;
   const current = QUESTIONS[state.questionIndex];
-  [...answersGrid.children].forEach((button) => {
+  [...answersGrid.querySelectorAll("button.answer-card")].forEach((button) => {
     const label = button.getAttribute("aria-label");
     const allAnswers = [current.correct, ...current.wrong];
     const answer = allAnswers.find((candidate) => candidate.label === label);
@@ -784,7 +912,11 @@ async function handleCorrect(answer) {
           showFinalRewardVideo();
           return;
         }
-        showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
+        if (current.type === "object" && current.videoSrc) {
+          showRewardVideo(current.videoSrc, current.videoPosterSrc, { kind: "card", index: state.questionIndex });
+        } else {
+          completeFood();
+        }
       },
       FEED_TIMING.resetAfterCorrectMs
     );
@@ -1114,7 +1246,7 @@ function changeRewardVideo(direction) {
 function advanceRewardVideo() {
   if (!state.rewardVideoActive || !state.rewardVideoSkippable) return;
   const maxIndex = getMaxRewardVideoIndex();
-  if (state.rewardVideoKind === "card" && state.rewardVideoIndex < maxIndex) {
+  if (state.rewardVideoKind === "card" && state.gameMode === "object" && state.rewardVideoIndex < maxIndex) {
     changeRewardVideo(1);
     return;
   }
@@ -1123,7 +1255,7 @@ function advanceRewardVideo() {
 
 function updateRewardVideoNav() {
   if (!videoPrevButton || !videoNextButton) return;
-  const isCardVideo = state.rewardVideoKind === "card";
+  const isCardVideo = state.rewardVideoKind === "card" && state.gameMode === "object";
   const canUseControls = state.rewardVideoActive && state.rewardVideoSkippable;
   const maxIndex = getMaxRewardVideoIndex();
   videoPrevButton.hidden = !state.rewardVideoActive || !isCardVideo;

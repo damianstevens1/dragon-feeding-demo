@@ -12,9 +12,20 @@
           <canvas id="start-canvas"></canvas>
         </div>
         <div class="start-copy">
-          <p class="eyebrow">Object function practice</p>
+          <p id="start-eyebrow" class="eyebrow">Choose a practice game</p>
           <h1>Dragon Feeding Game</h1>
-          <p>Choose what we use.</p>
+          <p id="start-description">Feed the dragon after each answer.</p>
+        </div>
+        <div class="mode-select" role="group" aria-label="Choose game type">
+          <button class="mode-button is-selected" type="button" data-mode="object" aria-pressed="true">
+            Object Functions
+          </button>
+          <button class="mode-button" type="button" data-mode="yesno" aria-pressed="false">
+            Yes/No
+          </button>
+          <button class="mode-button" type="button" data-mode="mixed" aria-pressed="false">
+            Mixed
+          </button>
         </div>
         <button id="play-button" class="primary-button" type="button">
           <span class="button-icon" aria-hidden="true"></span>
