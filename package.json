@@ -2,7 +2,10 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "ios:open": "open ios/DragonFeedingGame.xcodeproj",
+    "ios:build-web": "pnpm build",
+    "appstore:screenshots": "python3 scripts/create_app_store_screenshots.py"
   },
   "dependencies": {
     "three": "^0.167.1",

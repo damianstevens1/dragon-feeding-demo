@@ -15,3 +15,8 @@ phone-preview/
 .env
 .env.*
 *.log
+
+# Xcode local user state.
+xcuserdata/
+*.xcuserstate
+DerivedData/

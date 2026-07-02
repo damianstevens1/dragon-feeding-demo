@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="LaunchVC">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <scene sceneID="LaunchScene">
+            <objects>
+                <viewController id="LaunchVC" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="LaunchView">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="LaunchLogo" translatesAutoresizingMaskIntoConstraints="NO" id="LaunchLogoView">
+                                <rect key="frame" x="96.5" y="276" width="200" height="200"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="200" id="LogoWidth"/>
+                                    <constraint firstAttribute="height" constant="200" id="LogoHeight"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Dragon Feeding Game" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LaunchTitle">
+                                <rect key="frame" x="40" y="500" width="313" height="34"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="28"/>
+                                <color key="textColor" red="0.9058823529" green="0.9843137255" blue="0.9490196078" alpha="1" colorSpace="calibratedRGB"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.1000000000" green="0.2500000000" blue="0.2100000000" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstItem="LaunchLogoView" firstAttribute="centerX" secondItem="LaunchView" secondAttribute="centerX" id="LogoCenterX"/>
+                            <constraint firstItem="LaunchLogoView" firstAttribute="centerY" secondItem="LaunchView" secondAttribute="centerY" constant="-50" id="LogoCenterY"/>
+                            <constraint firstItem="LaunchTitle" firstAttribute="top" secondItem="LaunchLogoView" secondAttribute="bottom" constant="24" id="TitleTop"/>
+                            <constraint firstItem="LaunchTitle" firstAttribute="leading" secondItem="LaunchView" secondAttribute="leading" constant="40" id="TitleLeading"/>
+                            <constraint firstAttribute="trailing" secondItem="LaunchTitle" secondAttribute="trailing" constant="40" id="TitleTrailing"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="FirstResponder" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="LaunchLogo" width="240" height="240"/>
+    </resources>
+</document>
