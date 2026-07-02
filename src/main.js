@@ -70,6 +70,8 @@ const FOODS = [
   { id: "pizza", label: "pizza", src: "/assets/images/snacks/pizza.png" }
 ];
 
+const QUESTIONS_PER_RUN = FOODS.length;
+
 const startScreen = document.querySelector("#start-screen");
 const gameScreen = document.querySelector("#game-screen");
 const questionPanel = document.querySelector("#question-panel");
@@ -459,6 +461,11 @@ function shuffleQuestions(questions) {
   return shuffled;
 }
 
+function buildQuestionRun(modeKey) {
+  const mode = getMode(modeKey);
+  return shuffleQuestions(mode.questions).slice(0, Math.min(QUESTIONS_PER_RUN, mode.questions.length));
+}
+
 function getMode(mode) {
   return GAME_MODES[mode] ?? GAME_MODES.object;
 }
@@ -487,7 +494,7 @@ async function startGame() {
   stopDragonAmbience();
   clearTimers();
   state.gameMode = state.selectedGameMode;
-  QUESTIONS = shuffleQuestions(getMode(state.gameMode).questions);
+  QUESTIONS = buildQuestionRun(state.gameMode);
   state.screen = "playing";
   state.questionIndex = 0;
   state.stars = 0;
@@ -2612,14 +2619,25 @@ function updateRigPose(target, time, t) {
 
 function resetAfterTaskCompleted() {
   if (state.screen !== "playing") return;
+  state.screen = "start";
   state.questionIndex = 0;
   state.stars = 0;
   state.locked = false;
+  state.promptSpeaking = false;
+  state.completedQuestionIds = new Set();
   state.selectedFood = null;
   state.selectedFlyer = null;
   state.selectedSourceRect = null;
+  state.draggingFood = null;
   state.selectedAnswerId = null;
   state.wrongAnswerId = null;
+  state.rewardCompleting = false;
+  state.rewardVideoActive = false;
+  state.rewardVideoSkippable = false;
+  state.promptRun += 1;
+  clearRepeatTimer();
+  stopSpokenAudio();
+  stopBackgroundMusic();
   removeFlyingFood();
   gameScene.feedScale = 0;
   gameScene.displayScale = 0.5;
@@ -2628,10 +2646,16 @@ function resetAfterTaskCompleted() {
   gameScene.fireBreathing = false;
   clearFireParticles(gameScene);
   dragonPuppet?.classList.remove("is-fire-breathing", "is-funky-dancing");
+  startScreen.hidden = false;
+  gameScreen.hidden = true;
+  questionPanel.hidden = true;
+  rewardVideoPanel.hidden = true;
   celebrationPanel.hidden = true;
   renderFoodTray();
   updateHud();
+  updateAudioControls();
   lockFoodTray(false);
+  resizeAll();
 }
 
 function clearFireParticles(target) {
