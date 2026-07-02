@@ -70,8 +70,6 @@ const FOODS = [
   { id: "pizza", label: "pizza", src: "/assets/images/snacks/pizza.png" }
 ];
 
-const QUESTIONS_PER_RUN = FOODS.length;
-
 const startScreen = document.querySelector("#start-screen");
 const gameScreen = document.querySelector("#game-screen");
 const questionPanel = document.querySelector("#question-panel");
@@ -463,7 +461,7 @@ function shuffleQuestions(questions) {
 
 function buildQuestionRun(modeKey) {
   const mode = getMode(modeKey);
-  return shuffleQuestions(mode.questions).slice(0, Math.min(QUESTIONS_PER_RUN, mode.questions.length));
+  return shuffleQuestions(mode.questions);
 }
 
 function getMode(mode) {
@@ -538,7 +536,11 @@ async function startGame() {
 
 function renderFoodTray() {
   foodTray.replaceChildren();
-  FOODS.forEach((food, index) => {
+  const trayCount = Math.max(FOODS.length, QUESTIONS.length || FOODS.length);
+  foodTray.classList.toggle("is-long-run", trayCount > FOODS.length);
+  foodTray.classList.toggle("is-extra-long-run", trayCount > FOODS.length * 2);
+  foodTray.style.setProperty("--tray-columns", trayCount > FOODS.length ? "8" : "5");
+  Array.from({ length: trayCount }, (_, index) => FOODS[index % FOODS.length]).forEach((food, index) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "food-item";
@@ -971,7 +973,7 @@ function isFinalQuestion() {
 function startTriggerMotion() {
   const now = performance.now();
   const from = gameScene.displayScale ?? 0.5;
-  const to = 0.5 + (state.stars + 1) * 0.05;
+  const to = getFeedDisplayScale(state.stars + 1);
   gameScene.motion = {
     type: "trigger",
     startedAt: now,
@@ -985,6 +987,12 @@ function startTriggerMotion() {
     chewOpen: true,
     wiggleRoll: 0
   };
+}
+
+function getFeedDisplayScale(completedCount = state.stars) {
+  const questionCount = Math.max(1, QUESTIONS.length);
+  const progress = Math.min(completedCount, questionCount) / questionCount;
+  return 0.5 + progress * 0.5;
 }
 
 function startTaskCompleteDance() {
