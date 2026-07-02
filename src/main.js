@@ -42,6 +42,8 @@ const videoPrevButton = document.querySelector("#video-prev-button");
 const videoNextButton = document.querySelector("#video-next-button");
 const questionPrevButton = document.querySelector("#question-prev-button");
 const questionNextButton = document.querySelector("#question-next-button");
+const musicMuteButtons = [...document.querySelectorAll(".music-mute-button")];
+const voiceMuteButtons = [...document.querySelectorAll(".voice-mute-button")];
 const progressPill = document.querySelector("#progress-pill");
 const starsPill = document.querySelector("#stars-pill");
 const questionText = document.querySelector("#question-text");
@@ -54,6 +56,11 @@ const rewardVideoCard = rewardVideoPanel?.querySelector(".video-card");
 const dragonPuppet = document.querySelector("#dragon-puppet");
 const dragonMouthTarget = document.querySelector("#dragon-mouth-target");
 const dragonFireBreath = document.querySelector("#dragon-fire-breath");
+
+const AUDIO_PREF_KEYS = {
+  musicMuted: "dragonGameMusicMuted",
+  voiceMuted: "dragonGameVoiceMuted"
+};
 
 const state = {
   screen: "start",
@@ -75,6 +82,8 @@ const state = {
   rewardVideoSkippable: false,
   rewardVideoKind: "card",
   rewardVideoIndex: 0,
+  musicMuted: readStoredAudioPreference(AUDIO_PREF_KEYS.musicMuted),
+  voiceMuted: readStoredAudioPreference(AUDIO_PREF_KEYS.voiceMuted),
   completedQuestionIds: new Set()
 };
 
@@ -232,7 +241,7 @@ const startScene = makeScene(document.querySelector("#start-canvas"), { decorati
 playButton.addEventListener("click", startGame);
 playAgainButton.addEventListener("click", startGame);
 repeatButton.addEventListener("click", () => {
-  if (!state.locked || state.promptSpeaking) return;
+  if (!state.locked || state.promptSpeaking || state.voiceMuted) return;
   void playQuestionPrompt(0);
 });
 videoCloseButton.addEventListener("click", () => {
@@ -245,6 +254,12 @@ videoPrevButton.addEventListener("click", () => changeRewardVideo(-1));
 videoNextButton.addEventListener("click", advanceRewardVideo);
 questionPrevButton.addEventListener("click", () => navigateQuestion(-1));
 questionNextButton.addEventListener("click", () => navigateQuestion(1));
+musicMuteButtons.forEach((button) => {
+  button.addEventListener("click", () => setMusicMuted(!state.musicMuted));
+});
+voiceMuteButtons.forEach((button) => {
+  button.addEventListener("click", () => setVoiceMuted(!state.voiceMuted));
+});
 videoPlayButton.addEventListener("click", () => {
   if (state.rewardVideoDirectOpen) {
     window.open(rewardVideo.currentSrc || rewardVideo.src, "_blank", "noopener");
@@ -274,6 +289,7 @@ rewardVideo.addEventListener("loadeddata", () => {
 window.addEventListener("resize", resizeAll);
 
 renderFoodTray();
+updateAudioControls();
 resizeAll();
 animate(0);
 
@@ -400,6 +416,7 @@ async function startGame() {
   celebrationPanel.hidden = true;
   renderFoodTray();
   updateHud();
+  updateAudioControls();
   updateQuestionNav();
   resizeAll();
 }
@@ -711,9 +728,10 @@ async function playQuestionPrompt(delayMs = 0) {
   ]);
   if (run !== state.promptRun || state.screen !== "playing" || questionPanel.hidden) return;
   state.promptSpeaking = false;
-  repeatButton.disabled = false;
+  repeatButton.disabled = state.voiceMuted;
   rerenderAnswersOnly();
   updateQuestionNav();
+  updateAudioControls();
 }
 
 function selectAnswer(answer) {
@@ -1237,6 +1255,67 @@ function clearRepeatTimer() {
   }
 }
 
+function readStoredAudioPreference(key) {
+  try {
+    return window.localStorage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoredAudioPreference(key, value) {
+  try {
+    window.localStorage.setItem(key, value ? "true" : "false");
+  } catch {
+    // Local storage can be unavailable in restricted browser modes.
+  }
+}
+
+function setMusicMuted(muted) {
+  state.musicMuted = muted;
+  writeStoredAudioPreference(AUDIO_PREF_KEYS.musicMuted, muted);
+  if (muted) {
+    stopBackgroundMusic();
+  } else if (state.screen === "playing") {
+    void startBackgroundMusic();
+  }
+  updateAudioControls();
+}
+
+function setVoiceMuted(muted) {
+  state.voiceMuted = muted;
+  writeStoredAudioPreference(AUDIO_PREF_KEYS.voiceMuted, muted);
+  if (muted) {
+    stopSpokenAudio();
+    if (state.screen === "playing" && !questionPanel.hidden && state.promptSpeaking) {
+      state.promptRun += 1;
+      state.promptSpeaking = false;
+      repeatButton.disabled = true;
+      rerenderAnswersOnly();
+      updateQuestionNav();
+    }
+  } else if (state.screen === "playing" && !questionPanel.hidden) {
+    repeatButton.disabled = false;
+  }
+  updateAudioControls();
+}
+
+function updateAudioControls() {
+  musicMuteButtons.forEach((button) => {
+    button.classList.toggle("is-muted", state.musicMuted);
+    button.setAttribute("aria-pressed", state.musicMuted ? "true" : "false");
+    button.setAttribute("aria-label", state.musicMuted ? "Unmute background music" : "Mute background music");
+  });
+  voiceMuteButtons.forEach((button) => {
+    button.classList.toggle("is-muted", state.voiceMuted);
+    button.setAttribute("aria-pressed", state.voiceMuted ? "true" : "false");
+    button.setAttribute("aria-label", state.voiceMuted ? "Unmute voice prompts" : "Mute voice prompts");
+  });
+  if (!questionPanel.hidden) {
+    repeatButton.disabled = state.voiceMuted || state.promptSpeaking;
+  }
+}
+
 async function unlockAudio() {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1253,6 +1332,7 @@ async function unlockAudio() {
 async function playAudioOrSpeak(src, text, delayMs = 0) {
   if (delayMs) await wait(delayMs);
   stopSpokenAudio();
+  if (state.voiceMuted) return "muted";
   duckBackgroundMusic(true);
   try {
     try {
@@ -1439,6 +1519,7 @@ function stopDragonAmbience() {
 }
 
 async function startBackgroundMusic() {
+  if (state.musicMuted) return;
   await unlockAudio();
   if (backgroundMusic || backgroundBufferMusic) return;
   try {
@@ -1457,6 +1538,24 @@ async function startBackgroundMusic() {
     played.catch(() => {
       backgroundMusic = null;
     });
+  }
+}
+
+function stopBackgroundMusic() {
+  if (backgroundMusic) {
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+    backgroundMusic = null;
+  }
+  if (backgroundBufferMusic) {
+    try {
+      backgroundBufferMusic.source.stop();
+      backgroundBufferMusic.source.disconnect();
+      backgroundBufferMusic.gain.disconnect();
+    } catch {
+      // The background track may already have stopped.
+    }
+    backgroundBufferMusic = null;
   }
 }
 
@@ -1479,6 +1578,7 @@ async function startBufferedBackgroundMusic() {
 
 function duckBackgroundMusic(ducked) {
   backgroundMusicDucked = ducked;
+  if (state.musicMuted) return;
   const volume = ducked ? BACKGROUND_MUSIC_DUCKED_VOLUME : BACKGROUND_MUSIC_VOLUME;
   if (backgroundMusic) {
     backgroundMusic.volume = volume;

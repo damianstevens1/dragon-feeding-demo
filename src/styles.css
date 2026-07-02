@@ -533,7 +533,8 @@ p {
 
 .button-icon,
 .reset-icon,
-.sound-icon {
+.sound-icon,
+.music-icon {
   position: relative;
   flex: 0 0 auto;
   width: 22px;
@@ -580,6 +581,75 @@ p {
   border: 2px solid currentColor;
   border-left: 0;
   border-radius: 0 999px 999px 0;
+}
+
+.music-icon::before {
+  position: absolute;
+  content: "";
+  left: 12px;
+  top: 2px;
+  width: 4px;
+  height: 14px;
+  border-radius: 3px;
+  background: currentColor;
+}
+
+.music-icon::after {
+  position: absolute;
+  content: "";
+  left: 4px;
+  bottom: 2px;
+  width: 12px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 8px -11px 0 -3px currentColor;
+}
+
+.audio-control-row {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.start-audio-controls {
+  margin-top: 12px;
+}
+
+.game-audio-controls {
+  width: 100%;
+  pointer-events: auto;
+}
+
+.audio-toggle-button {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 50%;
+  color: #17362f;
+  background: rgba(255, 255, 248, 0.84);
+  box-shadow: 0 10px 22px rgba(42, 70, 63, 0.14);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+
+.audio-toggle-button.is-muted {
+  opacity: 0.72;
+}
+
+.audio-toggle-button.is-muted::after {
+  position: absolute;
+  content: "";
+  width: 30px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-42deg);
 }
 
 .game-header {
@@ -1252,6 +1322,27 @@ p {
 
   .app-shell {
     min-height: 860px;
+  }
+
+  .start-screen {
+    min-height: 0;
+    align-content: center;
+    padding: 18px;
+  }
+
+  .start-art::after {
+    bottom: clamp(18px, 5vh, 56px);
+    width: min(360px, 92vw);
+  }
+
+  .start-copy,
+  .start-screen .primary-button,
+  .start-audio-controls {
+    transform: translateY(-96px);
+  }
+
+  .start-copy {
+    width: min(640px, calc(100vw - 36px));
   }
 
   .food-tray {
