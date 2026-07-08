@@ -71,7 +71,7 @@ canvas {
 .start-art {
   background:
     linear-gradient(180deg, rgba(255, 244, 215, 0.05), rgba(255, 255, 255, 0.02)),
-    url("/assets/higgsfield/dragon-bg-vertical.jpg") center / cover no-repeat;
+    url("../assets/higgsfield/dragon-bg-vertical.jpg") center / cover no-repeat;
 }
 
 .start-art::after {
@@ -81,7 +81,7 @@ canvas {
   bottom: clamp(-86px, -8vh, -34px);
   width: clamp(360px, 54vw, 650px);
   aspect-ratio: 1;
-  background: url("/assets/dragon-frames/happy.png") center / contain no-repeat;
+  background: url("../assets/dragon-frames/happy.png") center / contain no-repeat;
   transform: translateX(-50%);
   filter:
     drop-shadow(0 34px 32px rgba(45, 28, 28, 0.26))
@@ -108,7 +108,7 @@ canvas {
   inset: 0;
   background:
     linear-gradient(90deg, rgba(255, 244, 215, 0.08), rgba(255, 255, 255, 0.03)),
-    url("/assets/higgsfield/dragon-bg-vertical.jpg") center / cover no-repeat;
+    url("../assets/higgsfield/dragon-bg-vertical.jpg") center / cover no-repeat;
   transform: scale(1.02);
 }
 
@@ -1341,7 +1341,7 @@ p {
   padding: 18px;
   background:
     linear-gradient(180deg, rgba(13, 31, 29, 0.1), rgba(11, 28, 35, 0.42)),
-    url("/assets/higgsfield/reward-bg-vertical.jpg") center / cover no-repeat;
+    url("../assets/higgsfield/reward-bg-vertical.jpg") center / cover no-repeat;
   text-align: center;
   backdrop-filter: blur(6px);
 }
@@ -1439,7 +1439,7 @@ p {
     inset: -20% -5.5% -9%;
     border: 0;
     border-radius: 0;
-    background: url("/assets/higgsfield/food-tray-platform.png") center / 100% 100% no-repeat;
+    background: url("../assets/higgsfield/food-tray-platform.png") center / 100% 100% no-repeat;
     box-shadow: none;
   }
 

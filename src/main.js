@@ -1,6 +1,11 @@
 import * as THREE from "three";
 import "./styles.css";
 
+function assetUrl(path) {
+  const base = window.location.protocol === "file:" ? "./" : import.meta.env.BASE_URL || "./";
+  return `${base}${path.replace(/^\/+/, "")}`;
+}
+
 const OBJECT_FUNCTION_QUESTIONS = [
   question("q07", "What do we use to stay dry in the rain?", item("umbrella"), [item("cookie"), item("chair")], "We use an umbrella to stay dry in the rain."),
   question("q08", "What do we use to brush our teeth?", item("toothbrush"), [item("toy-truck", "toy truck"), item("banana")], "We use a toothbrush to brush our teeth."),
@@ -58,16 +63,16 @@ const GAME_MODES = {
 let QUESTIONS = shuffleQuestions(OBJECT_FUNCTION_QUESTIONS);
 
 const FOODS = [
-  { id: "apple", label: "apple", src: "/assets/images/snacks/apple.png" },
-  { id: "banana", label: "banana", src: "/assets/images/snacks/banana.png" },
-  { id: "cookie", label: "cookie", src: "/assets/images/snacks/cookie.png" },
-  { id: "cupcake", label: "cupcake", src: "/assets/images/snacks/cupcake-remade.png" },
-  { id: "donut", label: "donut", src: "/assets/images/snacks/donut-remade.png" },
-  { id: "orange", label: "orange", src: "/assets/images/snacks/orange.png" },
-  { id: "pretzel", label: "pretzel", src: "/assets/images/snacks/pretzel.png" },
-  { id: "strawberry", label: "strawberry", src: "/assets/images/snacks/strawberry.png" },
-  { id: "watermelon", label: "watermelon", src: "/assets/images/snacks/watermelon.png" },
-  { id: "pizza", label: "pizza", src: "/assets/images/snacks/pizza.png" }
+  { id: "apple", label: "apple", src: assetUrl("assets/images/snacks/apple.png") },
+  { id: "banana", label: "banana", src: assetUrl("assets/images/snacks/banana.png") },
+  { id: "cookie", label: "cookie", src: assetUrl("assets/images/snacks/cookie.png") },
+  { id: "cupcake", label: "cupcake", src: assetUrl("assets/images/snacks/cupcake-remade.png") },
+  { id: "donut", label: "donut", src: assetUrl("assets/images/snacks/donut-remade.png") },
+  { id: "orange", label: "orange", src: assetUrl("assets/images/snacks/orange.png") },
+  { id: "pretzel", label: "pretzel", src: assetUrl("assets/images/snacks/pretzel.png") },
+  { id: "strawberry", label: "strawberry", src: assetUrl("assets/images/snacks/strawberry.png") },
+  { id: "watermelon", label: "watermelon", src: assetUrl("assets/images/snacks/watermelon.png") },
+  { id: "pizza", label: "pizza", src: assetUrl("assets/images/snacks/pizza.png") }
 ];
 
 const startScreen = document.querySelector("#start-screen");
@@ -136,8 +141,8 @@ const state = {
 };
 
 const FINAL_REWARD_VIDEO = {
-  src: "/assets/videos/final-dragon-reward.mp4",
-  posterSrc: "/assets/videos/final-dragon-reward-poster.png"
+  src: assetUrl("assets/videos/final-dragon-reward.mp4"),
+  posterSrc: assetUrl("assets/videos/final-dragon-reward-poster.png")
 };
 
 const FEED_TIMING = {
@@ -180,12 +185,12 @@ const DRAGON_FRAME_CLASSES = [
 
 // Replace these placeholder sprite files with final art in public/sprites/dragon/.
 const DRAGON_SPRITE_MANIFEST = {
-  idle: { src: "/sprites/dragon/idle.png", frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "idle-a" },
-  blink: { src: "/sprites/dragon/blink.png", frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "blink" },
-  "happy-bounce": { src: "/sprites/dragon/happy-bounce.png", frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "happy" },
-  "eat-crunch": { src: "/sprites/dragon/eat-crunch.png", frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "chew" },
-  "funky-dance": { src: "/sprites/dragon/funky-dance.png", frames: 12, frameWidth: 444, frameHeight: 444, fallbackFrame: "dance-01" },
-  "fire-breath": { src: "/sprites/dragon/fire-breath.png", frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "celebrate-b" }
+  idle: { src: assetUrl("sprites/dragon/idle.png"), frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "idle-a" },
+  blink: { src: assetUrl("sprites/dragon/blink.png"), frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "blink" },
+  "happy-bounce": { src: assetUrl("sprites/dragon/happy-bounce.png"), frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "happy" },
+  "eat-crunch": { src: assetUrl("sprites/dragon/eat-crunch.png"), frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "chew" },
+  "funky-dance": { src: assetUrl("sprites/dragon/funky-dance.png"), frames: 12, frameWidth: 444, frameHeight: 444, fallbackFrame: "dance-01" },
+  "fire-breath": { src: assetUrl("sprites/dragon/fire-breath.png"), frames: 4, frameWidth: 444, frameHeight: 444, fallbackFrame: "celebrate-b" }
 };
 
 const BLINK_TIMING = {
@@ -241,27 +246,27 @@ const FINAL_DANCE = {
 };
 
 const DRAGON_SOUND_PATHS = {
-  ambience: "/assets/audio/dragon/eerie_wind.ogg",
-  wake: "/assets/audio/dragon/confirmation_003.wav",
-  wing: ["/assets/audio/dragon/open_003.wav", "/assets/audio/dragon/open_004.wav"],
-  chomp: ["/assets/audio/dragon/scratch_003.wav", "/assets/audio/dragon/scratch_004.wav", "/assets/audio/dragon/drop_003.wav"],
-  correct: "/assets/audio/dragon/confirmation_004.wav",
-  wrong: "/assets/audio/dragon/error_004.wav",
-  celebrate: ["/assets/audio/dragon/confirmation_003.wav", "/assets/audio/dragon/confirmation_004.wav"]
+  ambience: assetUrl("assets/audio/dragon/eerie_wind.ogg"),
+  wake: assetUrl("assets/audio/dragon/confirmation_003.wav"),
+  wing: [assetUrl("assets/audio/dragon/open_003.wav"), assetUrl("assets/audio/dragon/open_004.wav")],
+  chomp: [assetUrl("assets/audio/dragon/scratch_003.wav"), assetUrl("assets/audio/dragon/scratch_004.wav"), assetUrl("assets/audio/dragon/drop_003.wav")],
+  correct: assetUrl("assets/audio/dragon/confirmation_004.wav"),
+  wrong: assetUrl("assets/audio/dragon/error_004.wav"),
+  celebrate: [assetUrl("assets/audio/dragon/confirmation_003.wav"), assetUrl("assets/audio/dragon/confirmation_004.wav")]
 };
 
 // Replace these generated placeholder audio files with final royalty-free assets when available.
 const DRAGON_AUDIO_PATHS = {
-  backgroundMusic: "/audio/lord-of-the-rangs.mp3",
-  fireBreath: "/audio/fire-breath.mp3",
-  crunch: "/audio/dragon-crunch.mp3"
+  backgroundMusic: assetUrl("audio/lord-of-the-rangs.mp3"),
+  fireBreath: assetUrl("audio/fire-breath.mp3"),
+  crunch: assetUrl("audio/dragon-crunch.mp3")
 };
 
 const BACKGROUND_MUSIC_VOLUME = 0.45;
 const BACKGROUND_MUSIC_DUCKED_VOLUME = 0.16;
 
 const SFX_PATHS = {
-  eat: "/assets/sfx/eat-crunch.wav",
+  eat: assetUrl("assets/sfx/eat-crunch.wav"),
   dragonCrunch: DRAGON_AUDIO_PATHS.crunch,
   fireBreath: DRAGON_AUDIO_PATHS.fireBreath
 };
@@ -411,9 +416,9 @@ function question(id, text, correct, wrong, answerSentence) {
     correct,
     wrong,
     answerSentence,
-    questionAudioSrc: `/assets/audio/${id}.mp3`,
-    answerAudioSrc: `/assets/audio/a${number}.mp3`,
-    videoSrc: `/assets/videos/${correct.id}.mp4`,
+    questionAudioSrc: assetUrl(`assets/audio/${id}.mp3`),
+    answerAudioSrc: assetUrl(`assets/audio/a${number}.mp3`),
+    videoSrc: assetUrl(`assets/videos/${correct.id}.mp4`),
     videoPosterSrc: correct.imageSrc
   };
 }
@@ -428,9 +433,9 @@ function yesNoQuestion(id, text, imageId, answer, answerSentence, actual) {
     correct,
     wrong: [wrong],
     answerSentence,
-    questionAudioSrc: `/assets/audio/yes-no/${id}-q.mp3`,
-    answerAudioSrc: `/assets/audio/yes-no/${id}-a.mp3`,
-    imageSrc: `/assets/images/yes-no-3d/${imageId}.jpg`,
+    questionAudioSrc: assetUrl(`assets/audio/yes-no/${id}-q.mp3`),
+    answerAudioSrc: assetUrl(`assets/audio/yes-no/${id}-a.mp3`),
+    imageSrc: assetUrl(`assets/images/yes-no-3d/${imageId}.jpg`),
     imageAlt: actual
   };
 }
@@ -446,7 +451,7 @@ function item(id, label = id.replace(/-/g, " ")) {
   return {
     id,
     label,
-    imageSrc: `/assets/images/${id}.jpg`
+    imageSrc: assetUrl(`assets/images/${id}.jpg`)
   };
 }
 

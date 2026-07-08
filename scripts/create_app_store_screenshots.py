@@ -1,11 +1,19 @@
 from pathlib import Path
+import shutil
+import zipfile
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "app-store/screenshots/iphone-6.9"
+OUT_65 = ROOT / "app-store/screenshots/iphone-6.5"
+UPLOAD_65 = ROOT / "app-store/screenshots/UPLOAD_THESE_IPHONE_6_5"
 SOURCE_OUT = ROOT / "app-store/screenshots/source"
 OUT.mkdir(parents=True, exist_ok=True)
+OUT_65.mkdir(parents=True, exist_ok=True)
 SOURCE_OUT.mkdir(parents=True, exist_ok=True)
+if UPLOAD_65.exists():
+    shutil.rmtree(UPLOAD_65)
+UPLOAD_65.mkdir(parents=True, exist_ok=True)
 
 WIDTH, HEIGHT = 1290, 2796
 
@@ -179,4 +187,18 @@ for filename, screenshot in SCREENSHOTS:
     screenshot.save(OUT / filename, quality=95)
     screenshot.resize((430, 932), Image.Resampling.LANCZOS).save(SOURCE_OUT / filename)
 
+    accepted = screenshot.resize((1284, 2778), Image.Resampling.LANCZOS)
+    accepted_name = Path(filename).with_suffix(".jpg").name
+    upload_name = f"{Path(filename).stem}-1284x2778.jpg"
+    accepted.save(OUT_65 / accepted_name, quality=95)
+    accepted.save(UPLOAD_65 / upload_name, quality=95)
+
+zip_path = ROOT / "app-store/screenshots/UPLOAD_THESE_IPHONE_6_5.zip"
+if zip_path.exists():
+    zip_path.unlink()
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as archive:
+    for screenshot_path in sorted(UPLOAD_65.iterdir()):
+        archive.write(screenshot_path, screenshot_path.relative_to(UPLOAD_65.parent))
+
 print("Generated App Store screenshot drafts")
+print("Upload these for iPhone 6.5 Display:", UPLOAD_65)

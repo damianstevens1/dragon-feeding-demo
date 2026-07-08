@@ -57,7 +57,7 @@
 				A10000000000000000000015 /* LaunchScreen.storyboard */,
 				A10000000000000000000014 /* Assets.xcassets */,
 			);
-			path = DragonFeedingGame;
+			path = DragonFeedingGame/DragonFeedingGame;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000032 /* Frameworks */ = {
@@ -109,6 +109,8 @@
 				TargetAttributes = {
 					A10000000000000000000040 = {
 						CreatedOnToolsVersion = 26.0;
+						DevelopmentTeam = W22423W9AL;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -160,7 +162,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\nexport PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"\nREPO_ROOT=\"$SRCROOT/..\"\ncd \"$REPO_ROOT\"\nif ! command -v pnpm >/dev/null 2>&1; then\n  echo \"error: pnpm is required to build the bundled web game. Install Node.js, then run: npm install -g pnpm\"\n  exit 1\nfi\npnpm install --frozen-lockfile\npnpm build\nWWW_DEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/www\"\nrm -rf \"$WWW_DEST\"\nmkdir -p \"$WWW_DEST\"\nditto \"$REPO_ROOT/dist\" \"$WWW_DEST\"\n";
+			shellScript = "set -euo pipefail\nexport PATH=\"/Users/michellestevens/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:/Users/michellestevens/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin:/opt/homebrew/bin:/usr/local/bin:$PATH\"\nREPO_ROOT=\"$SRCROOT/..\"\ncd \"$REPO_ROOT\"\nif ! command -v pnpm >/dev/null 2>&1; then\n  echo \"error: pnpm is required to build the bundled web game. Install Node.js, then run: npm install -g pnpm\"\n  exit 1\nfi\npnpm install --frozen-lockfile\npnpm build\nWWW_DEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/www\"\nrm -rf \"$WWW_DEST\"\nmkdir -p \"$WWW_DEST\"\nditto \"$REPO_ROOT/dist\" \"$WWW_DEST\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -299,11 +301,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = W22423W9AL;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = DragonFeedingGame/Info.plist;
+				INFOPLIST_FILE = DragonFeedingGame/DragonFeedingGame/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -325,11 +327,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = W22423W9AL;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = DragonFeedingGame/Info.plist;
+				INFOPLIST_FILE = DragonFeedingGame/DragonFeedingGame/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
